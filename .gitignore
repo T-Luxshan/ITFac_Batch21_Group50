@@ -1,0 +1,26 @@
+target/
+!.mvn/wrapper/maven-wrapper.jar
+
+!**/src/test/**/target/
+
+### IntelliJ IDEA ###
+.idea
+*.iws
+*.iml
+*.ipr
+
+# Always never ignore.
+!**/src/test/**
+
+### VS Code ###
+.vscode/
+
+# serenity test automation
+*.log
+/serenity/
+/**/serenity-output/
+/**/surefire-reports/
+/**/failsafe-reports/
+**/test-output/
+**/cucumber.json
+.DS_Store
