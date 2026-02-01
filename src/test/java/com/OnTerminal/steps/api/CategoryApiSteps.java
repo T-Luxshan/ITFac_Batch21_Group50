@@ -43,8 +43,8 @@ public class CategoryApiSteps {
                 .get(endpoint);
     }
 
-    @When("user creates category with name {string}")
-    public void user_creates_category_with_name(String name) {
+    @When("user creates unique category with name {string}")
+    public void user_creates_unique_category_with_name(String name) {
         // Validation: Category name must be between 3 and 10 characters
         // We use a shorter prefix if the name is too long, then add a 3-digit random
         // suffix
@@ -56,6 +56,16 @@ public class CategoryApiSteps {
                 .header("Authorization", "Bearer " + token)
                 .contentType("application/json")
                 .body("{\"name\":\"" + uniqueName + "\"}")
+                .post("/api/categories");
+    }
+
+    @When("user creates category with name {string}")
+    public void user_creates_category_with_name(String name) {
+        SerenityRest.given()
+                .baseUri(BASE)
+                .header("Authorization", "Bearer " + token)
+                .contentType("application/json")
+                .body("{\"name\":\"" + name + "\"}")
                 .post("/api/categories");
     }
 

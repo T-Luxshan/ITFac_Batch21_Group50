@@ -8,5 +8,11 @@ Feature: Category Management API (Group50)
   @TC_API_CAT_002
   Scenario: TC_API_CAT_002 Verify create category API (Admin)
     Given api user is authenticated as "admin"
-    When user creates category with name "Lilies"
+    When user creates unique category with name "Lilies"
     Then response status should be 201
+
+  @TC_API_CAT_003
+  Scenario: TC_API_CAT_003 Verify category name length validation
+    Given api user is authenticated as "admin"
+    When user creates category with name "AB"
+    Then response status should be 400
