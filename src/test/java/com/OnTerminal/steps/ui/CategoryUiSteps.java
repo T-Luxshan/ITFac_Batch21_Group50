@@ -115,4 +115,10 @@ public class CategoryUiSteps {
         assertTrue("Categories should be sorted by ID",
                 categoriesPage.isSortedByID());
     }
+
+    @Then("categories should be sorted by Name")
+    public void categories_should_be_sorted_by_name() {
+        assertTrue("Categories should be sorted by Name",
+                categoriesPage.isSortedByName());
+    }
 }

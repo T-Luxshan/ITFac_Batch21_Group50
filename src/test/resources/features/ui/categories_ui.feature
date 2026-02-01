@@ -40,3 +40,10 @@ Feature: Category Management UI (Group50)
     When user opens categories page
     And user sorts by "ID"
     Then categories should be sorted by ID
+
+  @TC_CAT_007
+  Scenario: TC_CAT_007 Verify category sorting by Name
+    Given user is logged in as "admin"
+    When user opens categories page
+    And user sorts by "Name"
+    Then categories should be sorted by Name

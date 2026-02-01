@@ -413,65 +413,91 @@ public class CategoriesPage extends PageObject {
         waitABit(1000);
         System.out.println("Sorting by column: " + columnName);
 
-        // Try to find header by text in <th> or div/span with columnheader role (MUI)
+        // Try to find header - specifically look for sortable indicators or buttons
+        // inside
         WebElementFacade header = findFirstPresentWithWait(
                 By.xpath("//th[contains(., '" + columnName + "')]"),
-                By.xpath("//div[@role='columnheader']//span[contains(., '" + columnName + "')]"),
                 By.xpath("//div[@role='columnheader' and contains(., '" + columnName + "')]"),
                 By.xpath("//span[contains(text(), '" + columnName + "')]"));
 
-        header.click();
-        waitABit(1500); // Wait for sort to apply
+        System.out.println("Found header: " + header.getText());
+
+        // Try to click an inner element if it exists (like a link or button)
+        List<org.openqa.selenium.WebElement> innerClickables = header
+                .findElements(By.cssSelector("a, button, .sort-icon, [role='button']"));
+        if (!innerClickables.isEmpty()) {
+            System.out.println("Clicking inner element for sorting");
+            innerClickables.get(0).click();
+        } else {
+            header.click();
+        }
+
+        waitABit(2500); // Increased wait
     }
 
     public boolean isSortedByID() {
         System.out.println("Verifying if sorted by ID...");
 
-        // Find all cells in the first column (assuming ID is first)
-        List<WebElementFacade> idCells = findAll(
-                By.cssSelector("table tbody tr td:first-child, [role='row'] [role='cell']:first-child"));
-
-        if (idCells.isEmpty()) {
-            System.out.println("No ID cells found to verify sorting");
-            return false;
-        }
-
+        List<WebElementFacade> rows = findAll(By.cssSelector("table tbody tr, [role='row']"));
         List<Integer> ids = new ArrayList<>();
-        for (WebElementFacade cell : idCells) {
-            String text = cell.getText().trim();
-            if (!text.isEmpty()) {
+
+        for (WebElementFacade row : rows) {
+            List<org.openqa.selenium.WebElement> cells = row.findElements(By.cssSelector("td, [role='cell']"));
+            if (!cells.isEmpty()) {
+                String text = cells.get(0).getText().trim();
                 try {
                     ids.add(Integer.parseInt(text));
-                } catch (NumberFormatException e) {
-                    System.out.println("Skipping non-numeric ID cell: " + text);
+                } catch (Exception e) {
                 }
             }
         }
 
         System.out.println("IDs found: " + ids);
+        return isNumericListSorted(ids);
+    }
 
-        if (ids.size() < 2) {
-            return true; // Single item or empty is sorted
+    public boolean isSortedByName() {
+        System.out.println("Verifying if sorted by Name...");
+
+        List<WebElementFacade> rows = findAll(By.cssSelector("table tbody tr, [role='row']"));
+        List<String> names = new ArrayList<>();
+
+        for (WebElementFacade row : rows) {
+            List<org.openqa.selenium.WebElement> cells = row.findElements(By.cssSelector("td, [role='cell']"));
+            if (cells.size() > 1) {
+                names.add(cells.get(1).getText().trim().toLowerCase());
+            }
         }
 
-        // Check if sorted ascending
+        System.out.println("Names found: " + names);
+        return isStringListSorted(names);
+    }
+
+    private boolean isNumericListSorted(List<Integer> list) {
+        if (list.size() < 2)
+            return true;
         boolean ascending = true;
-        for (int i = 0; i < ids.size() - 1; i++) {
-            if (ids.get(i) > ids.get(i + 1)) {
-                ascending = false;
-                break;
-            }
-        }
-
-        // Check if sorted descending (in case toggle was used)
         boolean descending = true;
-        for (int i = 0; i < ids.size() - 1; i++) {
-            if (ids.get(i) < ids.get(i + 1)) {
+        for (int i = 0; i < list.size() - 1; i++) {
+            if (list.get(i) > list.get(i + 1))
+                ascending = false;
+            if (list.get(i) < list.get(i + 1))
                 descending = false;
-                break;
-            }
         }
+        return ascending || descending;
+    }
 
+    private boolean isStringListSorted(List<String> list) {
+        if (list.size() < 2)
+            return true;
+        boolean ascending = true;
+        boolean descending = true;
+        for (int i = 0; i < list.size() - 1; i++) {
+            if (list.get(i).compareTo(list.get(i + 1)) > 0)
+                ascending = false;
+            if (list.get(i).compareTo(list.get(i + 1)) < 0)
+                descending = false;
+        }
         return ascending || descending;
     }
 
