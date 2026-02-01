@@ -127,4 +127,20 @@ public class CategoryUiSteps {
         assertTrue("Categories should be grouped by parent category",
                 categoriesPage.isGroupedByParent());
     }
+
+    @When("user opens add category page")
+    public void user_opens_add_category_page() {
+        categoriesPage.clickAddCategory();
+    }
+
+    @When("user leaves parent category empty")
+    public void user_leaves_parent_category_empty() {
+        categoriesPage.leaveParentCategoryEmpty();
+    }
+
+    @Then("category {string} should be a main category")
+    public void category_should_be_a_main_category(String categoryName) {
+        assertTrue("Category should be a main category: " + categoryName,
+                categoriesPage.isMainCategory(categoryName));
+    }
 }

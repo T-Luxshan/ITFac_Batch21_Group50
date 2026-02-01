@@ -181,8 +181,14 @@ public class CategoriesPage extends PageObject {
     }
 
     public void clickAddCategory() {
+        // Ensure we're on the categories page first
+        if (!getDriver().getCurrentUrl().contains("/ui/categories")) {
+            System.out.println("Not on categories page, navigating before clicking Add...");
+            openCategories();
+        }
+
         // Wait for page to be ready
-        waitABit(1000);
+        waitABit(1500);
 
         System.out.println("Attempting to click Add Category button");
 
@@ -233,6 +239,31 @@ public class CategoriesPage extends PageObject {
         System.out.println("Entered category name: " + categoryName);
     }
 
+    public void leaveParentCategoryEmpty() {
+        System.out.println("Leaving parent category empty");
+
+        // Find the parent category dropdown
+        WebElementFacade parentSelect = findFirstPresentWithWait(
+                By.cssSelector("select[name='parentCategory']"),
+                By.cssSelector("select[id*='parent']"),
+                By.cssSelector("select[id*='Parent']"),
+                By.cssSelector("select[class*='parent']"),
+                By.cssSelector("select[class*='Parent']"),
+                By.cssSelector("[role='combobox']"),
+                By.cssSelector("select"));
+
+        // Try to select the first option (often "Select Parent", "None", or empty)
+        try {
+            parentSelect.selectByIndex(0);
+            System.out.println("Selected first option from parent dropdown (assuming empty/none)");
+        } catch (Exception e) {
+            System.out.println("Could not select by index, trying to click and clear if it's an input");
+            if (parentSelect.getTagName().equalsIgnoreCase("input")) {
+                parentSelect.clear();
+            }
+        }
+    }
+
     public void saveCategory() {
         // Wait a moment before saving
         waitABit(500);
@@ -279,10 +310,11 @@ public class CategoriesPage extends PageObject {
         System.out.println("Checking if category appears in list: " + categoryName);
         System.out.println("Current URL before check: " + getDriver().getCurrentUrl());
 
-        // If we're not on the categories page, navigate to it
+        // If we're not on the categories list page (but maybe on add/edit page),
+        // navigate to it
         String currentUrl = getDriver().getCurrentUrl();
-        if (!currentUrl.contains("/ui/categories")) {
-            System.out.println("Not on categories page, navigating...");
+        if (!currentUrl.endsWith("/ui/categories") && !currentUrl.endsWith("/ui/categories/")) {
+            System.out.println("Not on categories list page (Current: " + currentUrl + "), navigating...");
             openCategories();
         } else {
             // Refresh the page to see the new category
@@ -312,11 +344,41 @@ public class CategoriesPage extends PageObject {
             System.out.println("Category found in list: " + categoryName);
         } else {
             System.out.println("Category NOT found in list: " + categoryName);
-            System.out.println("Page text contains: "
-                    + getDriver().getPageSource().substring(0, Math.min(500, getDriver().getPageSource().length())));
+            // Print page source for debugging
+            // System.out.println(getDriver().getPageSource());
         }
 
         return appears;
+    }
+
+    public boolean isMainCategory(String categoryName) {
+        System.out.println("Verifying if category is a main category: " + categoryName);
+
+        // Ensure we're on the list page (not /add or /edit)
+        String currentUrl = getDriver().getCurrentUrl();
+        if (!currentUrl.endsWith("/ui/categories") && !currentUrl.endsWith("/ui/categories/")) {
+            openCategories();
+        }
+
+        // Iterate through rows to find the category and check its parent column
+        List<WebElementFacade> rows = findAll(By.cssSelector("table tbody tr, [role='row']"));
+        for (WebElementFacade row : rows) {
+            List<org.openqa.selenium.WebElement> cells = row.findElements(By.cssSelector("td, [role='cell']"));
+            if (cells.size() > 2) {
+                String name = cells.get(1).getText().trim();
+                String parent = cells.get(2).getText().trim();
+
+                if (name.equalsIgnoreCase(categoryName)) {
+                    System.out.println("Found category: " + name + " with parent: '" + parent + "'");
+                    // Main category usually has '-' or empty or 'None' as parent
+                    return parent.isEmpty() || parent.equals("-") || parent.equalsIgnoreCase("None")
+                            || parent.equalsIgnoreCase("No Parent");
+                }
+            }
+        }
+
+        System.out.println("Category " + categoryName + " not found in table to check parent");
+        return false;
     }
 
     public boolean isAddCategoryButtonNotVisible() {

@@ -54,3 +54,12 @@ Feature: Category Management UI (Group50)
     When user opens categories page
     And user sorts by "Parent Category"
     Then categories should be grouped by parent category
+
+  @TC_CAT_009
+  Scenario: TC_CAT_009 Verify adding main category without parent
+    Given user is logged in as "admin"
+    When user opens add category page
+    And user enters category name "MainCat"
+    And user leaves parent category empty
+    And user saves category
+    Then category "MainCat" should be a main category
