@@ -62,4 +62,28 @@ public class CategoryUiSteps {
         assertTrue("Results should show only children of: " + parentCategory,
                 categoriesPage.showsOnlyChildrenOf(parentCategory));
     }
+
+    @When("user clicks Add Category")
+    public void user_clicks_add_category() {
+        categoriesPage.clickAddCategory();
+        System.out.println("Clicked Add Category button");
+    }
+
+    @When("user enters category name {string}")
+    public void user_enters_category_name(String categoryName) {
+        categoriesPage.enterCategoryName(categoryName);
+        System.out.println("Entered category name: " + categoryName);
+    }
+
+    @When("user saves category")
+    public void user_saves_category() {
+        categoriesPage.saveCategory();
+        System.out.println("Saved category");
+    }
+
+    @Then("category {string} should appear in the list")
+    public void category_should_appear_in_the_list(String categoryName) {
+        assertTrue("Category should appear in the list: " + categoryName,
+                categoriesPage.categoryAppearsInList(categoryName));
+    }
 }

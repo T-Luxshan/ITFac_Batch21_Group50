@@ -177,6 +177,145 @@ public class CategoriesPage extends PageObject {
         return resultCount > 0;
     }
 
+    public void clickAddCategory() {
+        // Wait for page to be ready
+        waitABit(1000);
+
+        System.out.println("Attempting to click Add Category button");
+
+        // Find Add/Create button - prioritize the exact text "Add A Category"
+        WebElementFacade addButton = findFirstPresentWithWait(
+                By.xpath("//button[contains(text(), 'Add A Category')]"),
+                By.xpath("//button[contains(text(), 'Add a Category')]"),
+                By.xpath("//button[text()='Add A Category']"),
+                By.xpath("//a[contains(text(), 'Add A Category')]"),
+                By.xpath("//button[contains(., 'Add A Category')]"),
+                By.cssSelector("button[id*='add']"),
+                By.cssSelector("button[id*='Add']"),
+                By.cssSelector("button[id*='create']"),
+                By.cssSelector("button[id*='Create']"),
+                By.cssSelector("button[class*='add']"),
+                By.cssSelector("button[class*='Add']"),
+                By.xpath("//button[contains(text(), 'Add')]"),
+                By.xpath("//button[contains(text(), 'Create')]"),
+                By.xpath("//button[contains(text(), 'New')]"));
+
+        System.out.println("Found button with text: " + addButton.getText());
+        addButton.click();
+        System.out.println("Clicked Add Category button");
+
+        // Wait for form/modal to appear
+        waitABit(1500);
+    }
+
+    public void enterCategoryName(String categoryName) {
+        // Wait for form to be visible
+        waitABit(1000);
+
+        System.out.println("Entering category name: " + categoryName);
+
+        // Find the name input field
+        WebElementFacade nameInput = findFirstPresentWithWait(
+                By.cssSelector("input[name='name']"),
+                By.cssSelector("input[name='categoryName']"),
+                By.cssSelector("input[id*='name']"),
+                By.cssSelector("input[id*='Name']"),
+                By.cssSelector("input[placeholder*='name']"),
+                By.cssSelector("input[placeholder*='Name']"),
+                By.cssSelector("input[type='text']"),
+                By.cssSelector("input"));
+
+        nameInput.clear();
+        nameInput.type(categoryName);
+        System.out.println("Entered category name: " + categoryName);
+    }
+
+    public void saveCategory() {
+        // Wait a moment before saving
+        waitABit(500);
+
+        System.out.println("Attempting to save category");
+        System.out.println("URL before save: " + getDriver().getCurrentUrl());
+
+        // Find Save/Submit button
+        WebElementFacade saveButton = findFirstPresentWithWait(
+                By.cssSelector("button[type='submit']"),
+                By.cssSelector("button[id*='save']"),
+                By.cssSelector("button[id*='Save']"),
+                By.cssSelector("button[id*='submit']"),
+                By.cssSelector("button[id*='Submit']"),
+                By.cssSelector("button[class*='save']"),
+                By.cssSelector("button[class*='Save']"),
+                By.cssSelector("button[class*='submit']"),
+                By.cssSelector("button[class*='Submit']"),
+                By.xpath("//button[contains(text(), 'Save')]"),
+                By.xpath("//button[contains(text(), 'save')]"),
+                By.xpath("//button[contains(text(), 'Submit')]"),
+                By.xpath("//button[contains(text(), 'OK')]"),
+                By.cssSelector("button[type='button']"));
+
+        System.out.println("Found save button: " + saveButton.getText());
+        saveButton.click();
+        System.out.println("Clicked Save button");
+
+        // Wait for save operation to complete and modal to close
+        waitABit(3000);
+
+        System.out.println("URL after save: " + getDriver().getCurrentUrl());
+
+        // Check for success message or notification
+        if (containsText("success") || containsText("Success") || containsText("created") || containsText("Created")) {
+            System.out.println("Success message found");
+        }
+    }
+
+    public boolean categoryAppearsInList(String categoryName) {
+        // Wait for save operation to complete
+        waitABit(2000);
+
+        System.out.println("Checking if category appears in list: " + categoryName);
+        System.out.println("Current URL before check: " + getDriver().getCurrentUrl());
+
+        // If we're not on the categories page, navigate to it
+        String currentUrl = getDriver().getCurrentUrl();
+        if (!currentUrl.contains("/ui/categories")) {
+            System.out.println("Not on categories page, navigating...");
+            openCategories();
+        } else {
+            // Refresh the page to see the new category
+            System.out.println("Refreshing page to see new category...");
+            getDriver().navigate().refresh();
+            waitABit(2000);
+        }
+
+        // Check if the category name appears anywhere on the page
+        boolean appears = containsText(categoryName);
+
+        if (!appears) {
+            // Try checking in table rows specifically
+            int rowCount = findAll(By.cssSelector("table tbody tr, [role='row']")).size();
+            System.out.println("Total rows found: " + rowCount);
+
+            // Check each row for the category name
+            for (WebElementFacade row : findAll(By.cssSelector("table tbody tr, [role='row']"))) {
+                if (row.getText().contains(categoryName)) {
+                    appears = true;
+                    break;
+                }
+            }
+        }
+
+        if (appears) {
+            System.out.println("Category found in list: " + categoryName);
+        } else {
+            System.out.println("Category NOT found in list: " + categoryName);
+            System.out.println("Page text contains: "
+                    + getDriver().getPageSource().substring(0, Math.min(500, getDriver().getPageSource().length())));
+        }
+
+        return appears;
+    }
+
     private WebElementFacade findFirstPresent(By... locators) {
         for (By by : locators) {
             if (!findAll(by).isEmpty()) {

@@ -17,3 +17,11 @@ Feature: Category Management UI (Group50)
     When user opens categories page
     And user filters by parent category "Flowers"
     Then results should show only children of "Flowers"
+  
+  Scenario: TC_CAT_004 Verify admin can add category with valid name
+    Given user is logged in as "admin"
+    When user opens categories page
+    And user clicks Add Category
+    And user enters category name "Lilies"
+    And user saves category
+    Then category "Lilies" should appear in the list
