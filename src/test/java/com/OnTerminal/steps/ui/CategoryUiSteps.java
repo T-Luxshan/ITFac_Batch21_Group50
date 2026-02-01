@@ -121,4 +121,10 @@ public class CategoryUiSteps {
         assertTrue("Categories should be sorted by Name",
                 categoriesPage.isSortedByName());
     }
+
+    @Then("categories should be grouped by parent category")
+    public void categories_should_be_grouped_by_parent_category() {
+        assertTrue("Categories should be grouped by parent category",
+                categoriesPage.isGroupedByParent());
+    }
 }

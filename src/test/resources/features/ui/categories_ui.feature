@@ -47,3 +47,10 @@ Feature: Category Management UI (Group50)
     When user opens categories page
     And user sorts by "Name"
     Then categories should be sorted by Name
+
+  @TC_CAT_008
+  Scenario: TC_CAT_008 Verify category sorting by Parent Category
+    Given user is logged in as "admin"
+    When user opens categories page
+    And user sorts by "Parent Category"
+    Then categories should be grouped by parent category

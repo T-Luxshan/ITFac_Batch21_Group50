@@ -413,23 +413,55 @@ public class CategoriesPage extends PageObject {
         waitABit(1000);
         System.out.println("Sorting by column: " + columnName);
 
+        // Log all available headers for debugging
+        List<WebElementFacade> allHeaders = findAll(By.cssSelector("th, [role='columnheader']"));
+        System.out.println("Available headers: ");
+        for (WebElementFacade h : allHeaders) {
+            System.out.println("- " + h.getText());
+        }
+
         // Try to find header - specifically look for sortable indicators or buttons
         // inside
         WebElementFacade header = findFirstPresentWithWait(
                 By.xpath("//th[contains(., '" + columnName + "')]"),
+                By.xpath("//th[contains(., '" + columnName.replace(" Category", "") + "')]"),
                 By.xpath("//div[@role='columnheader' and contains(., '" + columnName + "')]"),
+                By.xpath("//div[@role='columnheader' and contains(., '" + columnName.replace(" Category", "") + "')]"),
                 By.xpath("//span[contains(text(), '" + columnName + "')]"));
 
         System.out.println("Found header: " + header.getText());
 
-        // Try to click an inner element if it exists (like a link or button)
-        List<org.openqa.selenium.WebElement> innerClickables = header
-                .findElements(By.cssSelector("a, button, .sort-icon, [role='button']"));
+        // Helper to get clickable from header
+        By innerSelector = By.cssSelector("a, button, .sort-icon, [role='button'], span.MuiTableSortLabel-root");
+
+        List<org.openqa.selenium.WebElement> innerClickables = header.findElements(innerSelector);
         if (!innerClickables.isEmpty()) {
             System.out.println("Clicking inner element for sorting");
             innerClickables.get(0).click();
+            waitABit(1500);
+
+            // Re-find because the first click might refresh the page/table
+            try {
+                header = findFirstPresentWithWait(
+                        By.xpath("//th[contains(., '" + columnName + "')]"),
+                        By.xpath("//th[contains(., '" + columnName.replace(" Category", "") + "')]"));
+                innerClickables = header.findElements(innerSelector);
+                if (!innerClickables.isEmpty()) {
+                    innerClickables.get(0).click();
+                }
+            } catch (Exception e) {
+                System.out.println("Could not perform second click: " + e.getMessage());
+            }
         } else {
             header.click();
+            waitABit(1500);
+            try {
+                header = findFirstPresentWithWait(
+                        By.xpath("//th[contains(., '" + columnName + "')]"),
+                        By.xpath("//th[contains(., '" + columnName.replace(" Category", "") + "')]"));
+                header.click();
+            } catch (Exception e) {
+            }
         }
 
         waitABit(2500); // Increased wait
@@ -485,6 +517,23 @@ public class CategoriesPage extends PageObject {
                 descending = false;
         }
         return ascending || descending;
+    }
+
+    public boolean isGroupedByParent() {
+        System.out.println("Verifying if grouped/sorted by Parent Category...");
+
+        List<WebElementFacade> rows = findAll(By.cssSelector("table tbody tr, [role='row']"));
+        List<String> parents = new ArrayList<>();
+
+        for (WebElementFacade row : rows) {
+            List<org.openqa.selenium.WebElement> cells = row.findElements(By.cssSelector("td, [role='cell']"));
+            if (cells.size() > 2) {
+                parents.add(cells.get(2).getText().trim().toLowerCase());
+            }
+        }
+
+        System.out.println("Parents found: " + parents);
+        return isStringListSorted(parents);
     }
 
     private boolean isStringListSorted(List<String> list) {
