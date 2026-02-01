@@ -7,36 +7,45 @@ import net.serenitybdd.rest.SerenityRest;
 
 public class CategoryApiSteps {
 
+    private static final String BASE = System.getProperty("api.base.url", "http://localhost:8080");
+
     private String token;
 
-    @Given("admin is authenticated via API")
-    public void admin_is_authenticated_via_api() {
+    @Given("api user is authenticated as {string}")
+    public void api_user_is_authenticated_as(String role) {
+        String username = role.equalsIgnoreCase("admin") ? "admin" : "user";
+        String password = role.equalsIgnoreCase("admin") ? "admin123" : "user123"; // change if needed
+
         var response = SerenityRest.given()
-                .baseUri("http://localhost:8080")
+                .baseUri(BASE)
                 .contentType("application/json")
-                .body("{\"username\":\"admin\",\"password\":\"admin123\"}")
+                .body("{\"username\":\"" + username + "\",\"password\":\"" + password + "\"}")
                 .post("/api/auth/login")
                 .then()
                 .extract()
                 .response();
 
-        // token field might be "token" or "accessToken" depending on implementation
         token = response.jsonPath().getString("token");
-        if (token == null) {
+        if (token == null)
             token = response.jsonPath().getString("accessToken");
-        }
+        if (token == null)
+            token = response.jsonPath().getString("jwt");
+
+        // If still null, your login response uses a different field name.
+        // We'll fix it once you show me the login response body.
     }
 
-    @When("admin requests categories list")
-    public void admin_requests_categories_list() {
+    @When("user sends GET {string}")
+    public void user_sends_get(String endpoint) {
         SerenityRest.given()
-                .baseUri("http://localhost:8080")
+                .baseUri(BASE)
                 .header("Authorization", "Bearer " + token)
-                .get("/api/categories");
+                .get(endpoint);
     }
 
-    @Then("API should return categories successfully")
-    public void api_should_return_categories_successfully() {
-        SerenityRest.then().statusCode(200);
+    @Then("response status should be {int}")
+    public void response_status_should_be(Integer code) {
+        SerenityRest.then().statusCode(code);
     }
+
 }

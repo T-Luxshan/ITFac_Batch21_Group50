@@ -1,6 +1,7 @@
-Feature: Category Management (API)
+Feature: Category Management API (Group50)
 
-  Scenario: Verify GET /api/categories returns categories list
-    Given admin is authenticated via API
-    When admin requests categories list
-    Then API should return categories successfully
+  Scenario: TC_API_CAT_001 Verify GET categories API
+   Given api user is authenticated as "admin"
+   When user sends GET "/api/categories"
+   Then response status should be 200
+
