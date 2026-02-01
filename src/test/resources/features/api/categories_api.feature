@@ -16,3 +16,9 @@ Feature: Category Management API (Group50)
     Given api user is authenticated as "admin"
     When user creates category with name "AB"
     Then response status should be 400
+
+  @TC_API_CAT_004
+  Scenario: TC_API_CAT_004 Verify user cannot update category API
+    Given api user is authenticated as "user"
+    When user updates category id 1 with name "NewName"
+    Then response status should be 403

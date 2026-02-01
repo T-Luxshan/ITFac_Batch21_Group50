@@ -13,8 +13,8 @@ public class CategoryApiSteps {
 
     @Given("api user is authenticated as {string}")
     public void api_user_is_authenticated_as(String role) {
-        String username = role.equalsIgnoreCase("admin") ? "admin" : "user";
-        String password = role.equalsIgnoreCase("admin") ? "admin123" : "user123"; // change if needed
+        String username = role.equalsIgnoreCase("admin") ? "admin" : "testuser";
+        String password = role.equalsIgnoreCase("admin") ? "admin123" : "test123";
 
         var response = SerenityRest.given()
                 .baseUri(BASE)
@@ -25,14 +25,15 @@ public class CategoryApiSteps {
                 .extract()
                 .response();
 
+        if (response.statusCode() != 200) {
+            System.out.println("Login failed for " + username + ": " + response.asString());
+        }
+
         token = response.jsonPath().getString("token");
         if (token == null)
             token = response.jsonPath().getString("accessToken");
         if (token == null)
             token = response.jsonPath().getString("jwt");
-
-        // If still null, your login response uses a different field name.
-        // We'll fix it once you show me the login response body.
     }
 
     @When("user sends GET {string}")
@@ -67,6 +68,16 @@ public class CategoryApiSteps {
                 .contentType("application/json")
                 .body("{\"name\":\"" + name + "\"}")
                 .post("/api/categories");
+    }
+
+    @When("user updates category id {int} with name {string}")
+    public void user_updates_category_id_with_name(int id, String name) {
+        SerenityRest.given()
+                .baseUri(BASE)
+                .header("Authorization", "Bearer " + token)
+                .contentType("application/json")
+                .body("{\"name\":\"" + name + "\"}")
+                .put("/api/categories/" + id);
     }
 
     @Then("response status should be {int}")
