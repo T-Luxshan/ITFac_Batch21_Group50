@@ -11,3 +11,9 @@ Feature: Category Management UI (Group50)
     When user opens categories page
     And user searches category by keyword "Rose"
     Then results should contain category name "Rose"
+  
+  Scenario: TC_CAT_003 Verify filtering by parent category works
+    Given user is logged in as "admin"
+    When user opens categories page
+    And user filters by parent category "Flowers"
+    Then results should show only children of "Flowers"

@@ -32,6 +32,15 @@ public class LoginPage extends PageObject {
         username.type(user);
         password.type(pass);
         loginBtn.click();
+
+        // Wait for login to complete and redirect to happen
+        waitABit(2000);
+
+        // Wait for dashboard or any page to load after login
+        waitForCondition().until(driver -> driver.getCurrentUrl().contains("/ui/dashboard") ||
+                driver.getCurrentUrl().contains("/ui/"));
+
+        System.out.println("Login completed. Current URL: " + getDriver().getCurrentUrl());
     }
 
     private WebElementFacade findFirstPresent(By... locators) {

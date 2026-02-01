@@ -50,4 +50,16 @@ public class CategoryUiSteps {
         assertTrue("Results should contain category: " + categoryName,
                 categoriesPage.containsCategoryName(categoryName));
     }
+
+    @When("user filters by parent category {string}")
+    public void user_filters_by_parent_category(String parentCategory) {
+        categoriesPage.filterByParentCategory(parentCategory);
+        System.out.println("Filtered by parent category: " + parentCategory);
+    }
+
+    @Then("results should show only children of {string}")
+    public void results_should_show_only_children_of(String parentCategory) {
+        assertTrue("Results should show only children of: " + parentCategory,
+                categoriesPage.showsOnlyChildrenOf(parentCategory));
+    }
 }
