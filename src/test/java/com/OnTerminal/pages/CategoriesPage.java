@@ -4,6 +4,8 @@ import net.serenitybdd.core.pages.PageObject;
 import net.serenitybdd.core.pages.WebElementFacade;
 import org.openqa.selenium.By;
 
+import java.util.List;
+
 public class CategoriesPage extends PageObject {
 
     public void openCategories() {
@@ -314,6 +316,96 @@ public class CategoriesPage extends PageObject {
         }
 
         return appears;
+    }
+
+    public boolean isAddCategoryButtonNotVisible() {
+        // Wait for page to load
+        waitABit(1500);
+
+        System.out.println("Checking if Add Category button is NOT visible");
+
+        // Try to find the Add A Category button
+        try {
+            List<WebElementFacade> buttons = findAll(By.xpath("//button[contains(text(), 'Add A Category')]"));
+
+            if (buttons.isEmpty()) {
+                System.out.println("Add Category button not found - CORRECT for normal user");
+                return true;
+            }
+
+            // Check if button exists but is not visible
+            boolean anyVisible = false;
+            for (WebElementFacade button : buttons) {
+                if (button.isVisible()) {
+                    anyVisible = true;
+                    break;
+                }
+            }
+
+            if (!anyVisible) {
+                System.out.println("Add Category button exists but not visible - CORRECT");
+                return true;
+            }
+
+            System.out.println("Add Category button IS visible - INCORRECT for normal user");
+            return false;
+
+        } catch (Exception e) {
+            System.out.println("Add Category button not found (exception) - CORRECT for normal user");
+            return true;
+        }
+    }
+
+    public void openAddCategoryPageDirectly() {
+        // Construct URL for add category page
+        String base = System.getProperty("webdriver.base.url", "http://localhost:8080");
+        if (base == null || base.isBlank()) {
+            base = "http://localhost:8080";
+        }
+
+        // Try common patterns for add/create pages
+        String url = base.endsWith("/") ? base + "ui/categories/add" : base + "/ui/categories/add";
+
+        System.out.println("Attempting to access add category page directly: " + url);
+        openUrl(url);
+
+        waitABit(2000);
+        System.out.println("Current URL after direct access: " + getDriver().getCurrentUrl());
+    }
+
+    public boolean isAccessDeniedPage() {
+        waitABit(1000);
+
+        System.out.println("Checking for access denied page");
+        System.out.println("Current URL: " + getDriver().getCurrentUrl());
+        System.out.println("Page title: " + getDriver().getTitle());
+
+        // Check for common access denied indicators
+        boolean isAccessDenied = containsText("Access Denied") ||
+                containsText("access denied") ||
+                containsText("403") ||
+                containsText("Forbidden") ||
+                containsText("forbidden") ||
+                containsText("Unauthorized") ||
+                containsText("unauthorized") ||
+                containsText("Permission Denied") ||
+                containsText("permission denied") ||
+                containsText("Not Authorized") ||
+                containsText("not authorized") ||
+                getDriver().getCurrentUrl().contains("403") ||
+                getDriver().getCurrentUrl().contains("denied") ||
+                getDriver().getCurrentUrl().contains("unauthorized");
+
+        if (isAccessDenied) {
+            System.out.println("Access denied page detected - CORRECT");
+        } else {
+            System.out.println("Access denied page NOT detected");
+            // Print some page content for debugging
+            System.out.println("Page content snippet: " +
+                    getDriver().getPageSource().substring(0, Math.min(300, getDriver().getPageSource().length())));
+        }
+
+        return isAccessDenied;
     }
 
     private WebElementFacade findFirstPresent(By... locators) {

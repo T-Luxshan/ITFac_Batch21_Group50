@@ -25,3 +25,11 @@ Feature: Category Management UI (Group50)
     And user enters category name "Lilies"
     And user saves category
     Then category "Lilies" should appear in the list
+  
+  @TC_CAT_005
+  Scenario: TC_CAT_005 Verify normal user cannot add category
+    Given user is logged in as "user"
+    When user opens categories page
+    Then Add Category button should not be visible
+    When user opens add category page directly
+    Then user should see access denied page

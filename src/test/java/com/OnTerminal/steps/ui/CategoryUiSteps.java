@@ -19,7 +19,7 @@ public class CategoryUiSteps {
         if (role.equalsIgnoreCase("admin")) {
             loginPage.login("admin", "admin123");
         } else {
-            loginPage.login("user", "user123"); // change if needed
+            loginPage.login("testuser", "test123");
         }
     }
 
@@ -85,5 +85,23 @@ public class CategoryUiSteps {
     public void category_should_appear_in_the_list(String categoryName) {
         assertTrue("Category should appear in the list: " + categoryName,
                 categoriesPage.categoryAppearsInList(categoryName));
+    }
+
+    @Then("Add Category button should not be visible")
+    public void add_category_button_should_not_be_visible() {
+        assertTrue("Add Category button should NOT be visible for normal user",
+                categoriesPage.isAddCategoryButtonNotVisible());
+    }
+
+    @When("user opens add category page directly")
+    public void user_opens_add_category_page_directly() {
+        categoriesPage.openAddCategoryPageDirectly();
+        System.out.println("Attempted to access add category page directly");
+    }
+
+    @Then("user should see access denied page")
+    public void user_should_see_access_denied_page() {
+        assertTrue("User should see access denied page",
+                categoriesPage.isAccessDeniedPage());
     }
 }
