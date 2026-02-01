@@ -33,3 +33,10 @@ Feature: Category Management UI (Group50)
     Then Add Category button should not be visible
     When user opens add category page directly
     Then user should see access denied page
+
+  @TC_CAT_006
+  Scenario: TC_CAT_006 Verify category sorting by ID
+    Given user is logged in as "admin"
+    When user opens categories page
+    And user sorts by "ID"
+    Then categories should be sorted by ID

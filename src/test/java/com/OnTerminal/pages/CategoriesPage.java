@@ -4,6 +4,7 @@ import net.serenitybdd.core.pages.PageObject;
 import net.serenitybdd.core.pages.WebElementFacade;
 import org.openqa.selenium.By;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class CategoriesPage extends PageObject {
@@ -406,6 +407,72 @@ public class CategoriesPage extends PageObject {
         }
 
         return isAccessDenied;
+    }
+
+    public void sortBy(String columnName) {
+        waitABit(1000);
+        System.out.println("Sorting by column: " + columnName);
+
+        // Try to find header by text in <th> or div/span with columnheader role (MUI)
+        WebElementFacade header = findFirstPresentWithWait(
+                By.xpath("//th[contains(., '" + columnName + "')]"),
+                By.xpath("//div[@role='columnheader']//span[contains(., '" + columnName + "')]"),
+                By.xpath("//div[@role='columnheader' and contains(., '" + columnName + "')]"),
+                By.xpath("//span[contains(text(), '" + columnName + "')]"));
+
+        header.click();
+        waitABit(1500); // Wait for sort to apply
+    }
+
+    public boolean isSortedByID() {
+        System.out.println("Verifying if sorted by ID...");
+
+        // Find all cells in the first column (assuming ID is first)
+        List<WebElementFacade> idCells = findAll(
+                By.cssSelector("table tbody tr td:first-child, [role='row'] [role='cell']:first-child"));
+
+        if (idCells.isEmpty()) {
+            System.out.println("No ID cells found to verify sorting");
+            return false;
+        }
+
+        List<Integer> ids = new ArrayList<>();
+        for (WebElementFacade cell : idCells) {
+            String text = cell.getText().trim();
+            if (!text.isEmpty()) {
+                try {
+                    ids.add(Integer.parseInt(text));
+                } catch (NumberFormatException e) {
+                    System.out.println("Skipping non-numeric ID cell: " + text);
+                }
+            }
+        }
+
+        System.out.println("IDs found: " + ids);
+
+        if (ids.size() < 2) {
+            return true; // Single item or empty is sorted
+        }
+
+        // Check if sorted ascending
+        boolean ascending = true;
+        for (int i = 0; i < ids.size() - 1; i++) {
+            if (ids.get(i) > ids.get(i + 1)) {
+                ascending = false;
+                break;
+            }
+        }
+
+        // Check if sorted descending (in case toggle was used)
+        boolean descending = true;
+        for (int i = 0; i < ids.size() - 1; i++) {
+            if (ids.get(i) < ids.get(i + 1)) {
+                descending = false;
+                break;
+            }
+        }
+
+        return ascending || descending;
     }
 
     private WebElementFacade findFirstPresent(By... locators) {

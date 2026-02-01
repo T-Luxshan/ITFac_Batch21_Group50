@@ -104,4 +104,15 @@ public class CategoryUiSteps {
         assertTrue("User should see access denied page",
                 categoriesPage.isAccessDeniedPage());
     }
+
+    @When("user sorts by {string}")
+    public void user_sorts_by(String columnName) {
+        categoriesPage.sortBy(columnName);
+    }
+
+    @Then("categories should be sorted by ID")
+    public void categories_should_be_sorted_by_id() {
+        assertTrue("Categories should be sorted by ID",
+                categoriesPage.isSortedByID());
+    }
 }
