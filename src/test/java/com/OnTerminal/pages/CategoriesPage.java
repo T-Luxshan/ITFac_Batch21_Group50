@@ -264,6 +264,22 @@ public class CategoriesPage extends PageObject {
         }
     }
 
+    public void clickCancel() {
+        System.out.println("Attempting to click Cancel button");
+
+        WebElementFacade cancelButton = findFirstPresentWithWait(
+                By.xpath("//button[contains(text(), 'Cancel')]"),
+                By.xpath("//button[contains(text(), 'cancel')]"),
+                By.xpath("//a[contains(text(), 'Cancel')]"),
+                By.cssSelector("button[class*='cancel']"),
+                By.cssSelector("button[id*='cancel']"),
+                By.xpath("//button[contains(., 'Cancel')]"));
+
+        System.out.println("Found cancel button: " + cancelButton.getText());
+        cancelButton.click();
+        waitABit(1500);
+    }
+
     public void saveCategory() {
         // Wait a moment before saving
         waitABit(500);
@@ -437,38 +453,29 @@ public class CategoriesPage extends PageObject {
     }
 
     public boolean isAccessDeniedPage() {
+        System.out.println("Checking for access denied indicators...");
         waitABit(1000);
-
-        System.out.println("Checking for access denied page");
-        System.out.println("Current URL: " + getDriver().getCurrentUrl());
-        System.out.println("Page title: " + getDriver().getTitle());
-
-        // Check for common access denied indicators
         boolean isAccessDenied = containsText("Access Denied") ||
-                containsText("access denied") ||
-                containsText("403") ||
                 containsText("Forbidden") ||
-                containsText("forbidden") ||
-                containsText("Unauthorized") ||
-                containsText("unauthorized") ||
-                containsText("Permission Denied") ||
-                containsText("permission denied") ||
-                containsText("Not Authorized") ||
-                containsText("not authorized") ||
-                getDriver().getCurrentUrl().contains("403") ||
-                getDriver().getCurrentUrl().contains("denied") ||
-                getDriver().getCurrentUrl().contains("unauthorized");
+                containsText("403") ||
+                getDriver().getTitle().contains("Access Denied") ||
+                getDriver().getCurrentUrl().contains("403");
 
         if (isAccessDenied) {
             System.out.println("Access denied page detected - CORRECT");
         } else {
             System.out.println("Access denied page NOT detected");
-            // Print some page content for debugging
-            System.out.println("Page content snippet: " +
-                    getDriver().getPageSource().substring(0, Math.min(300, getDriver().getPageSource().length())));
         }
 
         return isAccessDenied;
+    }
+
+    public boolean isAtCategoriesList() {
+        String currentUrl = getDriver().getCurrentUrl();
+        System.out.println("Checking if at categories list. Current URL: " + currentUrl);
+        // List page usually ends with /ui/categories
+        return (currentUrl.endsWith("/ui/categories") || currentUrl.endsWith("/ui/categories/"))
+                && isTableVisible();
     }
 
     public void sortBy(String columnName) {

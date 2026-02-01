@@ -143,4 +143,15 @@ public class CategoryUiSteps {
         assertTrue("Category should be a main category: " + categoryName,
                 categoriesPage.isMainCategory(categoryName));
     }
+
+    @When("user clicks Cancel")
+    public void user_clicks_cancel() {
+        categoriesPage.clickCancel();
+    }
+
+    @Then("user should be on categories list page")
+    public void user_should_be_on_categories_list_page() {
+        assertTrue("User should be on categories list page",
+                categoriesPage.isAtCategoriesList());
+    }
 }

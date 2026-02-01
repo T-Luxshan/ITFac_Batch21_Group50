@@ -63,3 +63,10 @@ Feature: Category Management UI (Group50)
     And user leaves parent category empty
     And user saves category
     Then category "MainCat" should be a main category
+  
+  @TC_CAT_010
+  Scenario: TC_CAT_010 Verify Cancel button navigates back
+    Given user is logged in as "admin"
+    When user opens add category page
+    And user clicks Cancel
+    Then user should be on categories list page
