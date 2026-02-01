@@ -5,16 +5,13 @@ import com.OnTerminal.pages.LoginPage;
 import io.cucumber.java.en.Given;
 import io.cucumber.java.en.Then;
 import io.cucumber.java.en.When;
-import net.serenitybdd.annotations.Steps;
 
 import static org.junit.Assert.assertTrue;
 
 public class CategoryUiSteps {
 
-    // Serenity injects PageObjects automatically
-    @Steps
+    // PageObjects are injected automatically by Serenity
     LoginPage loginPage;
-    @Steps
     CategoriesPage categoriesPage;
 
     @Given("user is logged in as {string}")
@@ -22,18 +19,19 @@ public class CategoryUiSteps {
         if (role.equalsIgnoreCase("admin")) {
             loginPage.login("admin", "admin123");
         } else {
-            loginPage.login("user", "user123"); // change if your app uses different user creds
+            loginPage.login("user", "user123"); // change if needed
         }
     }
 
     @When("user opens categories page")
     public void user_opens_categories_page() {
         categoriesPage.openCategories();
+        System.out.println("Opened URL: " + categoriesPage.getDriver().getCurrentUrl());
     }
 
     @Then("categories table should be visible")
     public void categories_table_should_be_visible() {
-        assertTrue("Categories table should be visible", categoriesPage.isTableVisible());
+        assertTrue("Categories table/list should be visible", categoriesPage.isTableVisible());
     }
 
     @Then("pagination controls should be visible")
