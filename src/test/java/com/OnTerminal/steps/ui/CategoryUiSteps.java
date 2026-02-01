@@ -38,4 +38,16 @@ public class CategoryUiSteps {
     public void pagination_controls_should_be_visible() {
         assertTrue("Pagination controls should be visible", categoriesPage.isPaginationVisible());
     }
+
+    @When("user searches category by keyword {string}")
+    public void user_searches_category_by_keyword(String keyword) {
+        categoriesPage.searchByKeyword(keyword);
+        System.out.println("Searched for keyword: " + keyword);
+    }
+
+    @Then("results should contain category name {string}")
+    public void results_should_contain_category_name(String categoryName) {
+        assertTrue("Results should contain category: " + categoryName,
+                categoriesPage.containsCategoryName(categoryName));
+    }
 }
