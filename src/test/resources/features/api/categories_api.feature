@@ -22,3 +22,9 @@ Feature: Category Management API (Group50)
     Given api user is authenticated as "user"
     When user updates category id 1 with name "NewName"
     Then response status should be 403
+
+  @TC_API_CAT_005
+  Scenario: TC_API_CAT_005 Verify user cannot delete category API
+    Given api user is authenticated as "user"
+    When user deletes category id 1
+    Then response status should be 403

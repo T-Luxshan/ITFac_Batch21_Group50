@@ -80,6 +80,14 @@ public class CategoryApiSteps {
                 .put("/api/categories/" + id);
     }
 
+    @When("user deletes category id {int}")
+    public void user_deletes_category_id(int id) {
+        SerenityRest.given()
+                .baseUri(BASE)
+                .header("Authorization", "Bearer " + token)
+                .delete("/api/categories/" + id);
+    }
+
     @Then("response status should be {int}")
     public void response_status_should_be(Integer code) {
         SerenityRest.then().statusCode(code);
