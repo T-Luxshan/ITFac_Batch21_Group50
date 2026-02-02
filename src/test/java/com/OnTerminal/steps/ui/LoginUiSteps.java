@@ -14,20 +14,13 @@ public class LoginUiSteps {
 
     @Given("the login page is open")
     public void openLoginPage() {
-        loginPage.open();
+        loginPage.openLogin();
     }
 
     @When("the user logs in with username {string} and password {string}")
     public void theUserLogsInWithCredentials(String username, String password) {
         loginPage.login(username, password);
     }
-
-//    @Then("the user should be redirected to the dashboard")
-//    public void shouldBeOnDashboard(){
-//        String currentUrl = loginPage.getDriver().getCurrentUrl();
-//        Assert.assertTrue("Should be on dashboard page",
-//                currentUrl.contains("/dashboard") || currentUrl.contains("/ui/dashboard"));
-//    }
 
     @Then("the user is redirected to the dashboard")
     public void theUserIsRedirectedToTheDashboard() {
@@ -46,5 +39,32 @@ public class LoginUiSteps {
         Assert.assertTrue(true); // or add real check if you have DashboardPage
     }
 
+//     @TC_AUTH_03
+    @When("the user leaves username empty")
+    public void theUserLeavesUsernameEmpty() {
+        loginPage.leaveUsernameEmpty();
+    }
 
+    @When("the user enters password {string}")
+    public void theUserEntersPassword(String password) {
+        loginPage.enterPassword(password);  // reuse existing method
+    }
+
+    @When("the user clicks the login button")
+    public void theUserClicksTheLoginButton() {
+        loginPage.clickLogin();  // reuse existing
+    }
+
+    @Then("the validation message {string} is shown under the username field in red")
+    public void theValidationMessageIsShownUnderUsernameInRed(String expectedMessage) {
+        String actual = loginPage.getUsernameErrorMessage();
+        Assert.assertEquals("Username validation message mismatch", expectedMessage, actual);
+
+        Assert.assertTrue("Username error message is not displayed in red", loginPage.isUsernameErrorRed());
+    }
+
+    @Then("the user remains on the login page")
+    public void theUserRemainsOnTheLoginPage() {
+        Assert.assertTrue("User was redirected unexpectedly", loginPage.isStillOnLoginPage());
+    }
 }
