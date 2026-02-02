@@ -155,6 +155,58 @@ public class LoginPage extends PageObject {
     }
 
     // New: check no redirect happened
+    public void enterUsername(String username) {
+        WebElementFacade usernameField = findFirstPresent(
+                By.name("username"),
+                By.cssSelector("input[type='text']"));
+        usernameField.clear();
+        usernameField.type(username);
+    }
+
+    public void leavePasswordEmpty() {
+        WebElementFacade passwordField = findFirstPresent(
+                By.name("password"),
+                By.cssSelector("input[type='password']"));
+        passwordField.clear();
+    }
+
+    public String getPasswordErrorMessage() {
+        WebElementFacade errorElement = findFirstPresent(
+                By.cssSelector("[for='password'] ~ .error"),
+                By.cssSelector("input[name='password'] ~ .error"),
+                By.cssSelector(".alert.alert-danger"),
+                By.cssSelector(".invalid-message"),
+                By.xpath("//*[contains(text(), 'Password is required')]"),
+                By.xpath("//*[contains(text(), 'Invalid username or password')]"));
+        if (errorElement.isCurrentlyVisible()) {
+            return errorElement.getText().trim();
+        }
+        return "";
+    }
+
+    public boolean isPasswordErrorRed() {
+        WebElementFacade errorElement = findFirstPresent(
+                By.cssSelector("[for='password'] ~ .error"),
+                By.cssSelector("input[name='password'] ~ .error"),
+                By.cssSelector(".alert.alert-danger"),
+                By.cssSelector(".invalid-message"),
+                By.xpath("//*[contains(text(), 'Password is required')]"),
+                By.xpath("//*[contains(text(), 'Invalid username or password')]"));
+        if (!errorElement.isCurrentlyVisible()) {
+            return false;
+        }
+        String color = errorElement.getCssValue("color");
+        // Also check background color for alerts (e.g. standard bootstrap alert-danger
+        // is red/pinkish background with dark red text)
+        String bgColor = errorElement.getCssValue("background-color");
+
+        return color.contains("255, 0, 0") ||
+                color.contains("220, 53, 69") || // Bootstrap danger text
+                color.contains("114, 28, 36") || // Bootstrap alert-danger text proper
+                color.toLowerCase().contains("red") ||
+                bgColor.contains("248, 215, 218"); // Bootstrap alert-danger bg
+    }
+
     public boolean isStillOnLoginPage() {
         String url = getDriver().getCurrentUrl();
         return url.contains("/ui/login") || url.endsWith("/login");
