@@ -52,4 +52,41 @@ public class LoginPage extends PageObject {
         // fallback (will fail loudly if nothing found)
         return find(locators[0]);
     }
+
+    // After successful login — common Bootstrap classes
+    // Try these in order (most likely first)
+    public WebElementFacade getSuccessMessageElement() {
+        return findFirstPresent(
+                By.cssSelector(".alert-success"),              // Bootstrap standard success alert
+                By.cssSelector(".success-message"),            // custom class
+                By.cssSelector("[role='alert'].alert-success"),// ARIA + Bootstrap
+                By.cssSelector(".toast-success"),              // if using toasts
+                By.cssSelector(".alert.alert-success"),        // sometimes double class
+                By.xpath("//*[contains(text(), 'You have been logged in successfully')]")
+        );
+    }
+
+//    public String getSuccessMessageText() {
+//        WebElementFacade msg = getSuccessMessageElement();
+//        if (msg.isCurrentlyVisible()) {
+//            return msg.getText().trim();
+//        }
+//        return "";
+//    }
+//
+//    public boolean isSuccessMessageGreen() {
+//        WebElementFacade msg = getSuccessMessageElement();
+//        if (!msg.isCurrentlyVisible()) {
+//            return false;
+//        }
+//
+//        String bgColor = msg.getCssValue("background-color");
+//        String textColor = msg.getCssValue("color");
+//
+//        // Bootstrap .alert-success usually has:
+//        // background: light green (rgba(209, 231, 221, ...) or #d1e7dd)
+//        // text: darker green
+//        return (bgColor.contains("231, 221") || bgColor.contains("#d1e7dd") || bgColor.contains("green")) &&
+//                (textColor.contains("0, 128, 0") || textColor.contains("green") || textColor.contains("darkgreen"));
+//    }
 }

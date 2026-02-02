@@ -9,3 +9,4 @@ import org.junit.runner.RunWith;
                 "com.OnTerminal.steps.api" }, tags = "not @skip")
 public class CucumberTestSuite {
 }
+
