@@ -17,3 +17,9 @@ Feature: Security UI Tests
     Given user is logged in as "user"
     When user navigates to sales page
     Then Sell Plant button should not be visible
+
+  @TC_SEC_USR_UI_007 @authorization @user @negative @IFHAM
+  Scenario: TC_SEC_USR_UI_007 - User role blocked from Admin-only Plant Edit page
+    Given user is logged in as "user"
+    When user navigates directly to plant edit page with id "1"
+    Then user should see access denied page

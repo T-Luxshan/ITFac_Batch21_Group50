@@ -36,6 +36,16 @@ public class PlantsPage extends PageObject {
         waitABit(Constants.Timeouts.SHORT_WAIT * 1000L);
     }
 
+    /**
+     * Navigate to Edit Plant page (Admin only)
+     */
+    public void openEditPlantPage(String plantId) {
+        String url = config.getEditPlantUrl(plantId);
+        System.out.println("[PlantsPage] Navigating to Edit Plant page: " + url);
+        openUrl(url);
+        waitABit(Constants.Timeouts.SHORT_WAIT * 1000L);
+    }
+    
     // ==================== Stock Management ====================
 
     /**

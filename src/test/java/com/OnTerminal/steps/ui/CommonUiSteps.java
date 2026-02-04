@@ -94,7 +94,17 @@ public class CommonUiSteps {
         System.out.println("[CommonUiSteps] Navigating to sales page...");
         salesPage.openSalesPage();
     }
-    
+
+    /**
+     * Navigate directly to plant edit page
+     */
+    @When("user navigates directly to plant edit page with id {string}")
+    public void userNavigatesDirectlyToPlantEdit(String plantId) {
+        System.out.println("[CommonUiSteps] Navigating DIRECTLY to plant edit page ID: " + plantId);
+        plantsPage.openEditPlantPage(plantId);
+    }
+
+
     // ==================== VERIFICATION STEPS ====================
     // Common assertions used across multiple feature files
 
@@ -106,8 +116,31 @@ public class CommonUiSteps {
         String currentUrl = loginPage.getDriver().getCurrentUrl();
         System.out.println("[CommonUiSteps] Checking redirect to login. Current URL: " + currentUrl);
         assertTrue("User should be redirected to login page",
-                  currentUrl.contains(Constants.UrlPaths.UI_LOGIN) || 
-                  currentUrl.contains("/login"));
+                currentUrl.contains(Constants.UrlPaths.UI_LOGIN) ||
+                        currentUrl.contains("/login"));
+    }
+
+    /**
+     * Verify access denied page is displayed
+     */
+    @Then("user should see access denied page")
+    public void userShouldSeeAccessDeniedPage() {
+        System.out.println("[CommonUiSteps] Checking for access denied page...");
+        
+        // Check multiple indicators of access denied
+        String currentUrl = loginPage.getDriver().getCurrentUrl();
+        String pageSource = loginPage.getDriver().getPageSource().toLowerCase();
+        String pageTitle = loginPage.getDriver().getTitle().toLowerCase();
+        
+        boolean isAccessDenied = currentUrl.contains("access-denied") ||
+                                 currentUrl.contains("forbidden") ||
+                                 pageSource.contains("403 - access denied") ||
+                                 pageSource.contains("you do not have permission to access this page") ||
+                                 pageTitle.contains("access denied") ||
+                                 pageTitle.contains("forbidden");
+        
+        System.out.println("[CommonUiSteps] Access denied detected: " + isAccessDenied);
+        assertTrue("User should see access denied page", isAccessDenied);
     }
 
     // ==================== HELPER METHODS ====================
