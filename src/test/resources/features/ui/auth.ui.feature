@@ -1,4 +1,3 @@
-@admin
 
 Feature: Authentication UI Tests
 
