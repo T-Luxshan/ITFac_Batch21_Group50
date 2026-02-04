@@ -191,4 +191,101 @@ public class PlantsPage extends PageObject {
         System.out.println("On Plants List page: " + result + " (URL: " + currentUrl + ")");
         return result;
     }
+
+    // ==================== Add/Edit Plant Form Methods ====================
+
+    /**
+     * Click Add Plant button to navigate to add plant form
+     */
+    public void clickAddPlantButton() {
+        WebElementFacade addBtn = findFirstPresent(
+            By.cssSelector("a[href*='/plants/add']")
+        );
+        if (addBtn != null) {
+            addBtn.click();
+            waitABit(1000);
+            System.out.println("[PlantsPage] Clicked Add Plant button");
+        } else {
+            System.out.println("[PlantsPage] Add Plant button not found!");
+        }
+    }
+
+    /**
+     * Enter plant name in the form
+     */
+    public void enterPlantName(String name) {
+        WebElementFacade nameInput = findFirstPresent(
+            By.id("name")
+        );
+        if (nameInput != null) {
+            nameInput.clear();
+            nameInput.type(name);
+            System.out.println("[PlantsPage] Entered plant name: " + name);
+        } else {
+            System.out.println("[PlantsPage] Plant name input not found!");
+        }
+    }
+
+    /**
+     * Enter plant price in the form
+     */
+    public void enterPlantPrice(String price) {
+        WebElementFacade priceInput = findFirstPresent(
+            By.id("price")
+        );
+        if (priceInput != null) {
+            priceInput.clear();
+            priceInput.type(price);
+            System.out.println("[PlantsPage] Entered plant price: " + price);
+        } else {
+            System.out.println("[PlantsPage] Plant price input not found!");
+        }
+    }
+
+    /**
+     * Click Cancel button to return to plants list
+     */
+    public void clickCancelButton() {
+        WebElementFacade cancelBtn = findFirstPresent(
+            By.cssSelector("a.btn.btn-secondary")
+        );
+        if (cancelBtn != null) {
+            cancelBtn.click();
+            waitABit(1000);
+            System.out.println("[PlantsPage] Clicked Cancel button");
+        } else {
+            System.out.println("[PlantsPage] Cancel button not found!");
+        }
+    }
+
+    /**
+     * Check if a plant exists in the list by name
+     */
+    public boolean isPlantInList(String plantName) {
+        waitABit(1000);
+        List<WebElementFacade> rows = findAll(By.cssSelector("table.table-striped.table-bordered tbody tr"));
+        for (WebElementFacade row : rows) {
+            String name = getPlantNameFromRow(row);
+            if (name != null && name.equalsIgnoreCase(plantName)) {
+                System.out.println("[PlantsPage] Found plant '" + plantName + "' in list");
+                return true;
+            }
+        }
+        System.out.println("[PlantsPage] Plant '" + plantName + "' NOT found in list");
+        return false;
+    }
+
+    // ==================== Helper Methods ====================
+
+    private WebElementFacade findFirstPresent(By... locators) {
+        for (By by : locators) {
+            try {
+                WebElementFacade el = find(by);
+                if (el.isPresent() && el.isVisible()) {
+                    return el;
+                }
+            } catch (Exception ignored) {}
+        }
+        return null;
+    }
 }
