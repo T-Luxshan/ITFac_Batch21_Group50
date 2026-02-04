@@ -30,7 +30,7 @@ public class AuthApiSteps {
         SerenityRest.then().statusCode(code);
     }
 
-    private String jwtToken;
+    public static String jwtToken;
 
     @Then("the response should contain a valid JWT token")
     public void verifyJwtToken() {

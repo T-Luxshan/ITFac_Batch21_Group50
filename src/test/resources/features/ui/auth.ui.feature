@@ -1,4 +1,4 @@
-
+@UI
 Feature: Authentication UI Tests
 
   @TC_AUTH_01
