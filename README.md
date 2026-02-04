@@ -37,7 +37,7 @@ Run all tests:
 mvn clean verify
 ```
 
-## detailed Reports
+## Detailed Reports
 
 After running tests, generate the Serenity report:
 ```bash
