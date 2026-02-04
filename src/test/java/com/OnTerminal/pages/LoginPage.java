@@ -119,42 +119,51 @@ public class LoginPage extends PageObject {
     }
 
     // New: get username error message text (adjust selectors after manual inspect)
-    public String getUsernameErrorMessage() {
-        WebElementFacade errorElement = findFirstPresent(
-                By.cssSelector(".invalid-feedback"), // Bootstrap common
-                By.cssSelector(".text-danger"), // common red text
-                By.cssSelector("[for='username'] ~ .error"), // sibling after label
-                By.cssSelector("input[name='username'] ~ .error"), // sibling after input
-                By.cssSelector(".form-text.text-danger"), // Bootstrap 5
-                By.xpath("//*[contains(text(), 'Username is required')]") // text fallback
-        );
-        if (errorElement.isCurrentlyVisible()) {
-            return errorElement.getText().trim();
+    private WebElementFacade findFirstVisible(By... locators) {
+        for (By by : locators) {
+            WebElementFacade el = find(by);
+            if (el.isCurrentlyVisible()) {
+                return el;
+            }
         }
-        return "";
+        return null;
     }
 
-    // New: check if error is red (CSS color)
-    public boolean isUsernameErrorRed() {
-        WebElementFacade errorElement = findFirstPresent(
+    public String getUsernameErrorMessage() {
+        WebElementFacade errorElement = findFirstVisible(
                 By.cssSelector(".invalid-feedback"),
                 By.cssSelector(".text-danger"),
                 By.cssSelector("[for='username'] ~ .error"),
                 By.cssSelector("input[name='username'] ~ .error"),
                 By.cssSelector(".form-text.text-danger"),
                 By.xpath("//*[contains(text(), 'Username is required')]"));
-        if (!errorElement.isCurrentlyVisible()) {
+
+        if (errorElement != null) {
+            return errorElement.getText().trim();
+        }
+        return "";
+    }
+
+    public boolean isUsernameErrorRed() {
+        WebElementFacade errorElement = findFirstVisible(
+                By.cssSelector(".invalid-feedback"),
+                By.cssSelector(".text-danger"),
+                By.cssSelector("[for='username'] ~ .error"),
+                By.cssSelector("input[name='username'] ~ .error"),
+                By.cssSelector(".form-text.text-danger"),
+                By.xpath("//*[contains(text(), 'Username is required')]"));
+
+        if (errorElement == null) {
             return false;
         }
+
         String color = errorElement.getCssValue("color");
-        // Common red values (rgb or name)
         return color.contains("255, 0, 0") ||
-                color.contains("220, 53, 69") || // Bootstrap danger
+                color.contains("220, 53, 69") ||
                 color.contains("220, 38, 38") || // Tailwind red-600
                 color.toLowerCase().contains("red");
     }
 
-    // New: check no redirect happened
     public void enterUsername(String username) {
         WebElementFacade usernameField = findFirstPresent(
                 By.name("username"),
@@ -171,29 +180,27 @@ public class LoginPage extends PageObject {
     }
 
     public String getPasswordErrorMessage() {
-        WebElementFacade errorElement = findFirstPresent(
-                // Scoped matches first
+        WebElementFacade errorElement = findFirstVisible(
                 By.cssSelector("input[name='password'] ~ .invalid-feedback"),
                 By.cssSelector("input[name='password'] ~ .text-danger"),
                 By.cssSelector("#password ~ .invalid-feedback"),
                 By.cssSelector("#password ~ .text-danger"),
                 By.cssSelector(".password-error"),
-                // Existing fallbacks (scoped)
                 By.cssSelector("[for='password'] ~ .error"),
                 By.cssSelector("input[name='password'] ~ .error"),
-                // Global alerts are fine if they are essentially the only error
                 By.cssSelector(".alert.alert-danger"),
                 By.cssSelector(".invalid-message"),
                 By.xpath("//*[contains(text(), 'Password is required')]"),
                 By.xpath("//*[contains(text(), 'Invalid username or password')]"));
-        if (errorElement.isCurrentlyVisible()) {
+
+        if (errorElement != null) {
             return errorElement.getText().trim();
         }
         return "";
     }
 
     public boolean isPasswordErrorRed() {
-        WebElementFacade errorElement = findFirstPresent(
+        WebElementFacade errorElement = findFirstVisible(
                 By.cssSelector("input[name='password'] ~ .invalid-feedback"),
                 By.cssSelector("input[name='password'] ~ .text-danger"),
                 By.cssSelector("#password ~ .invalid-feedback"),
@@ -205,9 +212,11 @@ public class LoginPage extends PageObject {
                 By.cssSelector(".invalid-message"),
                 By.xpath("//*[contains(text(), 'Password is required')]"),
                 By.xpath("//*[contains(text(), 'Invalid username or password')]"));
-        if (!errorElement.isCurrentlyVisible()) {
+
+        if (errorElement == null) {
             return false;
         }
+
         String color = errorElement.getCssValue("color");
         String bgColor = errorElement.getCssValue("background-color");
 
