@@ -111,5 +111,4 @@ public class CategoryApiSteps {
     public void response_status_should_be(Integer code) {
         SerenityRest.then().statusCode(code);
     }
-
 }
