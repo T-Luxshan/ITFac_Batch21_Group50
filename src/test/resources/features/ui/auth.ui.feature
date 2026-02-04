@@ -1,4 +1,4 @@
-
+#@UI
 Feature: Authentication UI Tests
 
   @TC_AUTH_01
@@ -89,4 +89,14 @@ Feature: Authentication UI Tests
     And the user remains on the login page
 
 
-# TODO : verify user able to logout.
+  @TC_AUTH_21
+  Scenario: Verify user able to logout
+    Given the user is logged in as "admin"
+    When the user clicks the logout button
+    Then the user is redirected to the login page
+
+  @TC_AUTH_22
+  Scenario: Verify user able to logout
+    Given the user is logged in as "testuser"
+    When the user clicks the logout button
+    Then the user is redirected to the login page

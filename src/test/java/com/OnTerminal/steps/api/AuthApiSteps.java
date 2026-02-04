@@ -1,5 +1,6 @@
 package com.OnTerminal.steps.api;
 
+import io.cucumber.java.en.And;
 import io.cucumber.java.en.Given;
 import io.cucumber.java.en.Then;
 import io.cucumber.java.en.When;
@@ -29,8 +30,39 @@ public class AuthApiSteps {
         SerenityRest.then().statusCode(code);
     }
 
+    public static String jwtToken;
+
     @Then("the response should contain a valid JWT token")
     public void verifyJwtToken() {
         SerenityRest.then().body("$", anyOf(hasKey("token"), hasKey("accessToken"), hasKey("jwt")));
+        // Extract token for future use
+        try {
+            jwtToken = SerenityRest.lastResponse().jsonPath().getString("token");
+            if (jwtToken == null)
+                jwtToken = SerenityRest.lastResponse().jsonPath().getString("accessToken");
+            if (jwtToken == null)
+                jwtToken = SerenityRest.lastResponse().jsonPath().getString("jwt");
+        } catch (Exception e) {
+            System.out.println("Could not extract token: " + e.getMessage());
+        }
+    }
+
+    @Then("the response should not contain a valid JWT token")
+    public void verifyNoJwtToken() {
+        SerenityRest.then().body("$",
+                org.hamcrest.Matchers.not(anyOf(hasKey("token"), hasKey("accessToken"), hasKey("jwt"))));
+    }
+
+    @When("I send a POST request to {string}")
+    public void sendPostRequest(String endpoint) {
+        var req = SerenityRest.given()
+                .baseUri(BASE)
+                .contentType("application/json");
+
+        if (jwtToken != null && !jwtToken.isEmpty()) {
+            req.header("Authorization", "Bearer " + jwtToken);
+        }
+
+        req.post(endpoint);
     }
 }
