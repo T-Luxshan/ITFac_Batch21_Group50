@@ -83,6 +83,18 @@ public class CommonUiSteps {
         sleep(Constants.Timeouts.SHORT_WAIT * 1000);
     }
 
+    /**
+     * Navigate to Sales page
+     * Used by: Sales UI tests
+     * 
+     * Gherkin: When user navigates to sales page
+     */
+    @When("user navigates to sales page")
+    public void userNavigatesToSalesPage() {
+        System.out.println("[CommonUiSteps] Navigating to sales page...");
+        salesPage.openSalesPage();
+    }
+    
     // ==================== VERIFICATION STEPS ====================
     // Common assertions used across multiple feature files
 

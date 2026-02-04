@@ -154,6 +154,12 @@ public class SalesUiSteps {
         System.out.println("TC_SALES_ADM_UI_004: Plant successfully selected from dropdown");
     }
     
+    @Then("Sell Plant button should not be visible")
+    public void sellPlantButtonNotVisible() {
+        assertFalse("TC_SEC_USR_UI_006: Sell Plant button should NOT be visible for User role",
+                salesPage.isSellPlantButtonVisible());
+    }
+    
     // ==================== Helper Methods ====================
 
     /**

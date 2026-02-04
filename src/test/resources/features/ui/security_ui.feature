@@ -11,3 +11,9 @@ Feature: Security UI Tests
     Given user is not logged in
     When user navigates directly to categories page
     Then user should be redirected to login page
+
+  @TC_SEC_USR_UI_006 @authorization @user @negative @IFHAM
+  Scenario: TC_SEC_USR_UI_006 - USER cannot see Sell Plant button
+    Given user is logged in as "user"
+    When user navigates to sales page
+    Then Sell Plant button should not be visible

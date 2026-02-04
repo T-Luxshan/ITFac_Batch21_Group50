@@ -32,6 +32,16 @@ public class SalesPage extends PageObject {
         waitABit(Constants.Timeouts.SHORT_WAIT * 1000L);
     }
 
+    /**
+     * Navigate to Sales List page
+     */
+    public void openSalesPage() {
+        String url = config.getSalesUrl();
+        System.out.println("[SalesPage] Navigating to Sales page: " + url);
+        openUrl(url);
+        waitABit(Constants.Timeouts.SHORT_WAIT * 1000L);
+    }
+
     // ==================== Element Interactions ====================
 
     /**
@@ -133,8 +143,7 @@ public class SalesPage extends PageObject {
      */
     public void clickSellButton() {
         WebElementFacade sellBtn = findFirstPresent(
-            By.cssSelector("button.btn.btn-primary")
-        );
+                By.cssSelector("button.btn.btn-primary"));
         if (sellBtn != null) {
             sellBtn.click();
             waitABit(2000);
@@ -143,6 +152,36 @@ public class SalesPage extends PageObject {
             System.out.println("Sell button not found!");
         }
     }
+
+    /**
+     * Check if Sell Plant button is visible (should only be visible for Admin)
+     */
+    public boolean isSellPlantButtonVisible() {
+        try {
+            WebElementFacade sellBtn = findSellPlantButton();
+            return sellBtn != null && sellBtn.isVisible();
+        } catch (Exception e) {
+            System.out.println("Sell Plant button not found: " + e.getMessage());
+            return false;
+        }
+    }
+
+        private WebElementFacade findSellPlantButton() {
+            List<By> locators = List.of(
+                By.cssSelector("a[href='/ui/sales/new'].btn.btn-primary")
+            );
+
+            for (By locator : locators) {
+                try {
+                    WebElementFacade el = find(locator);
+                    if (el.isPresent() && el.isVisible()) {
+                        return el;
+                    }
+                } catch (Exception ignored) {}
+            }
+            return null;
+        }
+
 
     // ==================== Verification Methods ====================
 
