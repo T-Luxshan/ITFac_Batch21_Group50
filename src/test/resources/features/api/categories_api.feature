@@ -65,3 +65,4 @@ Feature: Category Management API (Group50)
     Given api user is authenticated as "admin"
     When user requests category page 0 size 10 sort "name,asc"
     Then response status should be 200
+    
