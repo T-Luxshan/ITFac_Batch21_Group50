@@ -16,7 +16,7 @@ This repository contains the test automation framework for the OnTerminal applic
 
 1. **Clone the repository:**
    ```bash
-   git clone <repository-url>
+   git clone https://github.com/T-Luxshan/ITFac_Batch21_Group50.git
    cd ITFac_Batch21_Group50
    ```
 
