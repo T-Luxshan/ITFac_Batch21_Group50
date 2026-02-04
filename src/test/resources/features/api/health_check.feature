@@ -1,4 +1,4 @@
-@API
+#@API
 Feature: API Health Check
 
   @TC_HEALTH_01
