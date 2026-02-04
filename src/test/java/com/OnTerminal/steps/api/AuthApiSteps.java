@@ -1,5 +1,6 @@
 package com.OnTerminal.steps.api;
 
+import io.cucumber.java.en.And;
 import io.cucumber.java.en.Given;
 import io.cucumber.java.en.Then;
 import io.cucumber.java.en.When;
@@ -32,5 +33,11 @@ public class AuthApiSteps {
     @Then("the response should contain a valid JWT token")
     public void verifyJwtToken() {
         SerenityRest.then().body("$", anyOf(hasKey("token"), hasKey("accessToken"), hasKey("jwt")));
+    }
+
+    @Then("the response should not contain a valid JWT token")
+    public void verifyNoJwtToken() {
+        SerenityRest.then().body("$",
+                org.hamcrest.Matchers.not(anyOf(hasKey("token"), hasKey("accessToken"), hasKey("jwt"))));
     }
 }
