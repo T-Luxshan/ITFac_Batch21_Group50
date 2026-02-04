@@ -1,11 +1,14 @@
 package com.OnTerminal.steps.ui;
 
+import com.OnTerminal.config.Constants;
 import com.OnTerminal.pages.CategoriesPage;
 import com.OnTerminal.pages.LoginPage;
 import com.OnTerminal.pages.PlantsPage;
 import com.OnTerminal.pages.SalesPage;
 import io.cucumber.java.en.Given;
+import io.cucumber.java.en.Then;
 import io.cucumber.java.en.When;
+import static org.junit.Assert.*;
 
 /**
  * CommonUiSteps - Shared UI Step Definitions
@@ -18,8 +21,10 @@ public class CommonUiSteps {
     SalesPage salesPage;
     PlantsPage plantsPage;
     CategoriesPage categoriesPage;
-
-    // ==================== AUTHENTICATION STEPS ====================
+    
+    // ==================== CONFIGURATION ====================
+    private final com.OnTerminal.config.ConfigManager config =
+            com.OnTerminal.config.ConfigManager.getInstance();
 
     /**
      * Login as specified role (admin or user)
@@ -28,8 +33,24 @@ public class CommonUiSteps {
     public void userIsLoggedInAs(String role) {
         System.out.println("[CommonUiSteps] Logging in as: " + role);
         loginPage.loginAs(role);
-        System.out.println("[CommonUiSteps] Login complete. Current URL: " + 
-                          loginPage.getDriver().getCurrentUrl());
+        System.out.println("[CommonUiSteps] Login complete. Current URL: " +
+                loginPage.getDriver().getCurrentUrl());
+    }
+
+    /**
+     * Clear user session - ensure not logged in
+     */
+    @Given("user is not logged in")
+    public void userIsNotLoggedIn() {
+        System.out.println("[CommonUiSteps] Clearing user session...");
+        try {
+            loginPage.getDriver().get(config.getLogoutUrl());
+            sleep(Constants.Timeouts.SHORT_WAIT * 1000);
+        } catch (Exception e) {
+            // If logout fails, clear cookies
+            loginPage.getDriver().manage().deleteAllCookies();
+        }
+        System.out.println("[CommonUiSteps] User session cleared - not logged in");
     }
 
     // ==================== NAVIGATION STEPS ====================
@@ -50,5 +71,44 @@ public class CommonUiSteps {
     public void userNavigatesToSellPlantPage() {
         System.out.println("[CommonUiSteps] Navigating to sell plant page...");
         salesPage.openSellPlantPage();
+    }
+
+    /**
+     * Navigate directly to categories page (bypass navigation)
+     */
+    @When("user navigates directly to categories page")
+    public void userNavigatesDirectlyToCategoriesPage() {
+        System.out.println("[CommonUiSteps] Navigating DIRECTLY to categories page (URL access)...");
+        loginPage.getDriver().get(config.getCategoriesUrl());
+        sleep(Constants.Timeouts.SHORT_WAIT * 1000);
+    }
+
+    // ==================== VERIFICATION STEPS ====================
+    // Common assertions used across multiple feature files
+
+    /**
+     * Verify user is redirected to login page
+     */
+    @Then("user should be redirected to login page")
+    public void userShouldBeRedirectedToLoginPage() {
+        String currentUrl = loginPage.getDriver().getCurrentUrl();
+        System.out.println("[CommonUiSteps] Checking redirect to login. Current URL: " + currentUrl);
+        assertTrue("User should be redirected to login page",
+                  currentUrl.contains(Constants.UrlPaths.UI_LOGIN) || 
+                  currentUrl.contains("/login"));
+    }
+
+    // ==================== HELPER METHODS ====================
+
+    /**
+     * Helper method for waiting (thread sleep)
+     * @param millis milliseconds to wait
+     */
+    private void sleep(long millis) {
+        try {
+            Thread.sleep(millis);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
     }
 }
