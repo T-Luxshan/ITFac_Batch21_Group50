@@ -139,6 +139,21 @@ public class SalesUiSteps {
                 salesPage.isErrorMessageDisplayed());
     }
     
+    @Then("dropdown should display available plants")
+    public void dropdownDisplaysPlants() {
+        assertTrue("TC_SALES_ADM_UI_004: Plant dropdown should be visible",
+                salesPage.isDropdownVisible());
+        assertFalse("TC_SALES_ADM_UI_004: Dropdown should have options",
+                salesPage.getDropdownOptions().isEmpty());
+    }
+    
+    @Then("plants should be selectable")
+    public void plantsShouldBeSelectable() {
+        // Try to select a plant - if no exception, it's selectable
+        salesPage.selectPlantFromDropdown(0);
+        System.out.println("TC_SALES_ADM_UI_004: Plant successfully selected from dropdown");
+    }
+    
     // ==================== Helper Methods ====================
 
     /**

@@ -4,6 +4,10 @@ import com.OnTerminal.config.ConfigManager;
 import com.OnTerminal.config.Constants;
 import net.serenitybdd.core.pages.PageObject;
 import net.serenitybdd.core.pages.WebElementFacade;
+
+import java.util.ArrayList;
+import java.util.List;
+
 import org.openqa.selenium.By;
 import org.openqa.selenium.support.ui.Select;
 
@@ -165,6 +169,32 @@ public class SalesPage extends PageObject {
         } catch (Exception ignored) {
         }
         return false;
+    }
+
+    /**
+     * Check if dropdown is visible
+     */
+    public boolean isDropdownVisible() {
+        WebElementFacade dropdown = findPlantDropdown();
+        return dropdown != null && dropdown.isVisible();
+    }
+
+    /**
+     * Get all dropdown options
+     */
+    public List<String> getDropdownOptions() {
+        WebElementFacade dropdown = findPlantDropdown();
+        List<String> options = new ArrayList<>();
+        
+        if (dropdown != null && dropdown.getTagName().equalsIgnoreCase("select")) {
+            Select select = new Select(dropdown);
+            for (org.openqa.selenium.WebElement option : select.getOptions()) {
+                options.add(option.getText());
+            }
+        }
+        
+        System.out.println("Dropdown options: " + options);
+        return options;
     }
 
     // ==================== Helper Methods ====================

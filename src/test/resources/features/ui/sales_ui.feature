@@ -29,3 +29,10 @@ Feature: Sales Management UI
     And user enters quantity greater than available stock
     And user clicks sell button
     Then error message should be displayed on the same page
+
+  @TC_SALES_ADM_UI_004 @admin @smoke @IFHAM
+  Scenario: TC_SALES_ADM_UI_004 - Plant dropdown shows available plants with stock
+    Given user is logged in as "admin"
+    When user navigates to sell plant page
+    Then dropdown should display available plants
+    And plants should be selectable
