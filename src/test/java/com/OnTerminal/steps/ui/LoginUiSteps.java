@@ -86,4 +86,28 @@ public class LoginUiSteps {
 
         Assert.assertTrue("Password error message is not displayed in red", loginPage.isPasswordErrorRed());
     }
+
+    @Steps
+    com.OnTerminal.pages.DashboardPage dashboardPage;
+
+    @Given("the user is logged in as {string}")
+    public void userIsLoggedIn(String userRole) {
+        loginPage.openLogin();
+        if (userRole.equals("admin")) {
+            loginPage.login("admin", "admin123");
+        } else {
+            loginPage.login("testuser", "test123");
+        }
+    }
+
+    @When("the user clicks the logout button")
+    public void userClicksLogout() {
+        dashboardPage.clickLogout();
+    }
+
+    @Then("the user is redirected to the login page")
+    public void userIsRedirectedToLogin() {
+        dashboardPage.waitForCondition().until(d -> d.getCurrentUrl().contains("login"));
+        Assert.assertTrue("Not redirected to login page", loginPage.isStillOnLoginPage());
+    }
 }
