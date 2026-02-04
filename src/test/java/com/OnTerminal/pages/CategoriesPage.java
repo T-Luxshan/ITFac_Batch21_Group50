@@ -360,30 +360,44 @@ public class CategoriesPage extends PageObject {
     public boolean isMainCategory(String categoryName) {
         System.out.println("Verifying if category is a main category: " + categoryName);
 
-        // Ensure we're on the list page (not /add or /edit)
-        String currentUrl = getDriver().getCurrentUrl();
-        if (!currentUrl.endsWith("/ui/categories") && !currentUrl.endsWith("/ui/categories/")) {
+        // Ensure we're on the list page before searching
+        if (!getDriver().getCurrentUrl().contains("/ui/categories") || getDriver().getCurrentUrl().contains("/add")) {
+            System.out.println("Not on list page, navigating to categories list...");
             openCategories();
         }
 
+        // Search for the category first to make sure it's on the current page
+        searchByKeyword(categoryName);
+        waitABit(2000);
+
         // Iterate through rows to find the category and check its parent column
         List<WebElementFacade> rows = findAll(By.cssSelector("table tbody tr, [role='row']"));
+        System.out.println("Rows found after search: " + rows.size());
+
         for (WebElementFacade row : rows) {
             List<org.openqa.selenium.WebElement> cells = row.findElements(By.cssSelector("td, [role='cell']"));
-            if (cells.size() > 2) {
+            if (cells.size() >= 3) {
                 String name = cells.get(1).getText().trim();
                 String parent = cells.get(2).getText().trim();
 
+                System.out.println("Checking row - Name: '" + name + "', Parent: '" + parent + "'");
+
                 if (name.equalsIgnoreCase(categoryName)) {
-                    System.out.println("Found category: " + name + " with parent: '" + parent + "'");
-                    // Main category usually has '-' or empty or 'None' as parent
-                    return parent.isEmpty() || parent.equals("-") || parent.equalsIgnoreCase("None")
-                            || parent.equalsIgnoreCase("No Parent");
+                    System.out.println("Found match! Checking parent value...");
+                    // Main category usually has '-', empty, 'None', 'No Parent' or 'root'
+                    boolean isMain = parent.isEmpty() ||
+                            parent.equals("-") ||
+                            parent.equalsIgnoreCase("None") ||
+                            parent.equalsIgnoreCase("No Parent") ||
+                            parent.equalsIgnoreCase("root");
+
+                    System.out.println("Is main category? " + isMain);
+                    return isMain;
                 }
             }
         }
 
-        System.out.println("Category " + categoryName + " not found in table to check parent");
+        System.out.println("Category '" + categoryName + "' not found in table after search.");
         return false;
     }
 
