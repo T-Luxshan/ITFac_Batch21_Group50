@@ -1,3 +1,5 @@
+@admin
+
 Feature: Authentication UI Tests
 
   @TC_AUTH_01
@@ -88,4 +90,4 @@ Feature: Authentication UI Tests
     And the user remains on the login page
 
 
-
+# TODO : verify user able to logout.

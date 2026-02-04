@@ -172,8 +172,16 @@ public class LoginPage extends PageObject {
 
     public String getPasswordErrorMessage() {
         WebElementFacade errorElement = findFirstPresent(
+                // Scoped matches first
+                By.cssSelector("input[name='password'] ~ .invalid-feedback"),
+                By.cssSelector("input[name='password'] ~ .text-danger"),
+                By.cssSelector("#password ~ .invalid-feedback"),
+                By.cssSelector("#password ~ .text-danger"),
+                By.cssSelector(".password-error"),
+                // Existing fallbacks (scoped)
                 By.cssSelector("[for='password'] ~ .error"),
                 By.cssSelector("input[name='password'] ~ .error"),
+                // Global alerts are fine if they are essentially the only error
                 By.cssSelector(".alert.alert-danger"),
                 By.cssSelector(".invalid-message"),
                 By.xpath("//*[contains(text(), 'Password is required')]"),
@@ -186,6 +194,11 @@ public class LoginPage extends PageObject {
 
     public boolean isPasswordErrorRed() {
         WebElementFacade errorElement = findFirstPresent(
+                By.cssSelector("input[name='password'] ~ .invalid-feedback"),
+                By.cssSelector("input[name='password'] ~ .text-danger"),
+                By.cssSelector("#password ~ .invalid-feedback"),
+                By.cssSelector("#password ~ .text-danger"),
+                By.cssSelector(".password-error"),
                 By.cssSelector("[for='password'] ~ .error"),
                 By.cssSelector("input[name='password'] ~ .error"),
                 By.cssSelector(".alert.alert-danger"),
@@ -196,13 +209,12 @@ public class LoginPage extends PageObject {
             return false;
         }
         String color = errorElement.getCssValue("color");
-        // Also check background color for alerts (e.g. standard bootstrap alert-danger
-        // is red/pinkish background with dark red text)
         String bgColor = errorElement.getCssValue("background-color");
 
         return color.contains("255, 0, 0") ||
                 color.contains("220, 53, 69") || // Bootstrap danger text
                 color.contains("114, 28, 36") || // Bootstrap alert-danger text proper
+                color.contains("220, 38, 38") || // Tailwind red-600
                 color.toLowerCase().contains("red") ||
                 bgColor.contains("248, 215, 218"); // Bootstrap alert-danger bg
     }
