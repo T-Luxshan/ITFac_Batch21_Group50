@@ -4,17 +4,25 @@ import io.cucumber.java.en.Given;
 import io.cucumber.java.en.Then;
 import io.cucumber.java.en.When;
 import net.serenitybdd.rest.SerenityRest;
+import net.thucydides.model.util.EnvironmentVariables;
 
 public class CategoryApiSteps {
 
     private static final String BASE = System.getProperty("api.base.url", "http://localhost:8080");
 
     private String token;
+    private EnvironmentVariables environmentVariables;
 
     @Given("api user is authenticated as {string}")
     public void api_user_is_authenticated_as(String role) {
-        String username = role.equalsIgnoreCase("admin") ? "admin" : "testuser";
-        String password = role.equalsIgnoreCase("admin") ? "admin123" : "test123";
+        String username, password;
+        if (role.equalsIgnoreCase("admin")) {
+            username = environmentVariables.getProperty("admin.username");
+            password = environmentVariables.getProperty("admin.password");
+        } else {
+            username = environmentVariables.getProperty("user.username");
+            password = environmentVariables.getProperty("user.password");
+        }
 
         var response = SerenityRest.given()
                 .baseUri(BASE)

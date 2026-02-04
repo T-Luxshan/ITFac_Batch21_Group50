@@ -5,6 +5,7 @@ import com.OnTerminal.pages.LoginPage;
 import io.cucumber.java.en.Given;
 import io.cucumber.java.en.Then;
 import io.cucumber.java.en.When;
+import net.thucydides.model.util.EnvironmentVariables;
 
 import static org.junit.Assert.assertTrue;
 
@@ -13,14 +14,19 @@ public class CategoryUiSteps {
     // PageObjects are injected automatically by Serenity
     LoginPage loginPage;
     CategoriesPage categoriesPage;
+    private EnvironmentVariables environmentVariables;
 
     @Given("user is logged in as {string}")
     public void user_is_logged_in_as(String role) {
+        String username, password;
         if (role.equalsIgnoreCase("admin")) {
-            loginPage.login("admin", "admin123");
+            username = environmentVariables.getProperty("admin.username");
+            password = environmentVariables.getProperty("admin.password");
         } else {
-            loginPage.login("testuser", "test123");
+            username = environmentVariables.getProperty("user.username");
+            password = environmentVariables.getProperty("user.password");
         }
+        loginPage.login(username, password);
     }
 
     @When("user opens categories page")

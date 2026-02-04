@@ -33,7 +33,7 @@ public class CategoriesPage extends PageObject {
     public boolean isTableVisible() {
         // Allow page to be considered "loaded" if:
         // - table exists OR
-        // - grid exists (MUI etc.) OR
+        // - grid exists OR
         // - "No category found" appears (valid empty state)
         boolean hasTable = !findAll(By.cssSelector("table")).isEmpty();
         boolean hasGridRole = !findAll(By.cssSelector("[role='grid']")).isEmpty();
