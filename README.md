@@ -1,6 +1,6 @@
 # OnTerminal Test Automation
 
-This repository contains the test automation framework for the OnTerminal application, built by ITFac Batch 21 Group 50. It supports both UI and API testing using Serenity BDD, and Cucumber.
+This repository contains the test automation framework for the OnTerminal application. It supports both UI and API testing using Serenity BDD, and Cucumber.
 
 ## Tech Stack
 - **Language:** Java 21
