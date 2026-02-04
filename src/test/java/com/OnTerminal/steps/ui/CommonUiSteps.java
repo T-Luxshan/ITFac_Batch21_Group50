@@ -24,7 +24,6 @@ public class CommonUiSteps {
     /**
      * Login as specified role (admin or user)
      */
-    // @TC_SALES_ADM_UI_001
     @Given("user is logged in as {string}")
     public void userIsLoggedInAs(String role) {
         System.out.println("[CommonUiSteps] Logging in as: " + role);
@@ -38,7 +37,6 @@ public class CommonUiSteps {
     /**
      * Navigate to Plants page
      */
-    // @TC_SALES_ADM_UI_001
     @Given("user navigates to plants page")
     public void userNavigatesToPlantsPage() {
         System.out.println("[CommonUiSteps] Navigating to plants page...");
@@ -48,7 +46,6 @@ public class CommonUiSteps {
     /**
      * Navigate to Sell Plant page
      */
-    // @TC_SALES_ADM_UI_001
     @When("user navigates to sell plant page")
     public void userNavigatesToSellPlantPage() {
         System.out.println("[CommonUiSteps] Navigating to sell plant page...");

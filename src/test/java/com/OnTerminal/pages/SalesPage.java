@@ -21,7 +21,6 @@ public class SalesPage extends PageObject {
     /**
      * Navigate to Sell Plant page (Admin only)
      */
-    // @TC_SALES_ADM_UI_001 
     public void openSellPlantPage() {
         String url = config.getSellPlantUrl();
         System.out.println("[SalesPage] Navigating to Sell Plant page: " + url);
@@ -34,7 +33,6 @@ public class SalesPage extends PageObject {
     /**
      * Select plant from dropdown by index
      */
-    // @TC_SALES_ADM_UI_001
     public void selectPlantFromDropdown(int index) {
         WebElementFacade dropdown = findPlantDropdown();
         if (dropdown != null) {
@@ -55,7 +53,6 @@ public class SalesPage extends PageObject {
      * Select plant from dropdown by name (visible text)
      * Dropdown options have format: "PlantName (Stock: X)"
      */
-    // @TC_SALES_ADM_UI_001
     public void selectPlantByName(String plantName) {
         WebElementFacade dropdown = findPlantDropdown();
         System.out.println("[SalesPage] Looking for dropdown for plant: '" + plantName + "'");
@@ -95,7 +92,6 @@ public class SalesPage extends PageObject {
         }
     }
 
-    // @TC_SALES_ADM_UI_001
     private WebElementFacade findPlantDropdown() {
         try {
             WebElementFacade el = find(By.id("plantId"));
@@ -108,7 +104,6 @@ public class SalesPage extends PageObject {
     /**
      * Enter quantity value
      */
-    // @TC_SALES_ADM_UI_001
     public void enterQuantity(String quantity) {
         WebElementFacade quantityInput = findQuantityInput();
         if (quantityInput != null) {
@@ -120,7 +115,6 @@ public class SalesPage extends PageObject {
         }
     }
 
-    // @TC_SALES_ADM_UI_001
     private WebElementFacade findQuantityInput() {
         try {
             WebElementFacade el = find(By.id("quantity"));
@@ -133,7 +127,6 @@ public class SalesPage extends PageObject {
     /**
      * Click the Sell/Submit button
      */
-    // @TC_SALES_ADM_UI_001
     public void clickSellButton() {
         WebElementFacade sellBtn = findFirstPresent(
             By.cssSelector("button.btn.btn-primary")
@@ -152,7 +145,6 @@ public class SalesPage extends PageObject {
     /**
      * Check if currently on Sales List page
      */
-    // @TC_SALES_ADM_UI_001
     public boolean isOnSalesListPage() {
         String currentUrl = getDriver().getCurrentUrl();
         boolean result = currentUrl.contains("/ui/sales") && !currentUrl.contains("/new");
@@ -160,9 +152,23 @@ public class SalesPage extends PageObject {
         return result;
     }
 
+    /**
+     * Check if error message is displayed
+     */
+    public boolean isErrorMessageDisplayed() {
+        try {
+            WebElementFacade el = find(By.cssSelector(".alert-danger"));
+            if (el.isPresent() && el.isVisible()) {
+                System.out.println("Error message found: " + el.getText());
+                return true;
+            }
+        } catch (Exception ignored) {
+        }
+        return false;
+    }
+
     // ==================== Helper Methods ====================
 
-    // @TC_SALES_ADM_UI_001
     private WebElementFacade findFirstPresent(By... locators) {
         for (By by : locators) {
             try {

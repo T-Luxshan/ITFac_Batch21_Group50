@@ -29,7 +29,6 @@ public class PlantsPage extends PageObject {
     /**
      * Navigate to Plants List page
      */
-    // @TC_SALES_ADM_UI_001
     public void openPlantsPage() {
         String url = config.getPlantsUrl();
         System.out.println("[PlantsPage] Navigating to Plants page: " + url);
@@ -42,7 +41,6 @@ public class PlantsPage extends PageObject {
     /**
      * Record stock quantity of first plant for later comparison
      */
-    // @TC_SALES_ADM_UI_001
     public void recordStockOfFirstPlant() {
         waitABit(1000);
         List<WebElementFacade> rows = findAll(By.cssSelector("table"));
@@ -61,7 +59,6 @@ public class PlantsPage extends PageObject {
     /**
      * Get the name of the first plant in the list
      */
-    // @TC_SALES_ADM_UI_001
     public String getFirstPlantName() {
         List<WebElementFacade> rows = findAll(By.cssSelector("table tbody tr"));
         if (!rows.isEmpty()) {
@@ -73,7 +70,6 @@ public class PlantsPage extends PageObject {
     /**
      * Get recorded stock value for a plant
      */
-    // @TC_SALES_ADM_UI_001
     public int getRecordedStock(String plantName) {
         return stockSnapshot.getOrDefault(plantName, -1);
     }
@@ -81,7 +77,6 @@ public class PlantsPage extends PageObject {
     /**
      * Get current stock value for a plant from the UI
      */
-    // @TC_SALES_ADM_UI_001
     public int getCurrentStock(String plantName) {
         waitABit(1000);
         List<WebElementFacade> rows = findAll(By.cssSelector("table.table-striped tbody tr"));
@@ -95,7 +90,6 @@ public class PlantsPage extends PageObject {
         return -1;
     }
 
-    // @TC_SALES_ADM_UI_001
     private String getPlantNameFromRow(WebElementFacade row) {
         List<WebElementFacade> cells = row.thenFindAll(By.tagName("td"));
 
@@ -108,7 +102,6 @@ public class PlantsPage extends PageObject {
         return null;
     }
 
-    // @TC_SALES_ADM_UI_001
     private int getStockFromRow(WebElementFacade row) {
         List<WebElementFacade> cells = row.thenFindAll(By.tagName("td"));
 
@@ -137,12 +130,59 @@ public class PlantsPage extends PageObject {
         return 0;
     }
 
+
+    /**
+     * Find a plant with low stock (< 5) for testing
+     */
+    public String findLowStockPlant() {
+        waitABit(1000);
+        List<WebElementFacade> rows = findAll(By.cssSelector("table.table-striped tbody tr"));
+
+        // First try to find plant with 1-4 stock (look for low stock badge)
+        for (WebElementFacade row : rows) {
+            try {
+                // Check if row has "Low" badge indicating low stock
+                WebElementFacade lowBadge = row.thenFind("td span.badge.bg-danger");
+                if (lowBadge.isPresent() && lowBadge.getText().contains("Low")) {
+                    String plantName = getPlantNameFromRow(row);
+                    int stock = getStockFromRow(row);
+                    stockSnapshot.put(plantName, stock);
+                    System.out.println("Found low stock plant: '" + plantName + "' with stock: " + stock);
+                    return plantName;
+                }
+            } catch (Exception ignored) {
+            }
+        }
+
+        // Fallback: find plant with stock between 1-4
+        for (WebElementFacade row : rows) {
+            int stock = getStockFromRow(row);
+            if (stock > 0 && stock < 5) {
+                String plantName = getPlantNameFromRow(row);
+                stockSnapshot.put(plantName, stock);
+                System.out.println("Found low stock plant: '" + plantName + "' with stock: " + stock);
+                return plantName;
+            }
+        }
+
+        // If no low stock plant, use first available plant
+        if (!rows.isEmpty()) {
+            WebElementFacade firstRow = rows.get(0);
+            String plantName = getPlantNameFromRow(firstRow);
+            int stock = getStockFromRow(firstRow);
+            stockSnapshot.put(plantName, stock);
+            System.out.println("Using first plant: '" + plantName + "' with stock: " + stock);
+            return plantName;
+        }
+
+        return null;
+    }
+
     // ==================== Verification Methods ====================
 
     /**
      * Check if currently on Plants List page
      */
-    // @TC_SALES_ADM_UI_001
     public boolean isOnPlantsListPage() {
         String currentUrl = getDriver().getCurrentUrl();
         boolean result = currentUrl.contains("/ui/plants") && 
