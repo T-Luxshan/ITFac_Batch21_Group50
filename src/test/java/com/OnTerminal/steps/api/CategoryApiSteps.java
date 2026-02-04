@@ -88,6 +88,17 @@ public class CategoryApiSteps {
                 .delete("/api/categories/" + id);
     }
 
+    @When("user requests category page {int} size {int} sort {string}")
+    public void user_requests_category_page_size_sort(int page, int size, String sort) {
+        SerenityRest.given()
+                .baseUri(BASE)
+                .header("Authorization", "Bearer " + token)
+                .queryParam("page", page)
+                .queryParam("size", size)
+                .queryParam("sort", sort)
+                .get("/api/categories");
+    }
+
     @Then("response status should be {int}")
     public void response_status_should_be(Integer code) {
         SerenityRest.then().statusCode(code);
