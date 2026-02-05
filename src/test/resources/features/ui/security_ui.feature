@@ -23,6 +23,13 @@ Feature: Security UI Tests
     Given user is logged in as "user"
     When user navigates directly to plant edit page with id "1"
     Then user should see access denied page
+
+  @TC_AUTH_USR_UI_010 @auth @user
+  Scenario: TC_AUTH_USR_UI_010 - Logout shows success message
+    Given user is logged in as "user"
+    When user clicks logout button
+    Then user should see logout success message
+    And user should be redirected to login page
     
   # ============================================
   # NAVIGATION TESTS

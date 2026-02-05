@@ -10,6 +10,8 @@ import io.cucumber.java.en.Then;
 import io.cucumber.java.en.When;
 import static org.junit.Assert.*;
 
+import org.openqa.selenium.WebElement;
+
 /**
  * CommonUiSteps - Shared UI Step Definitions
  * ==========================================
@@ -113,6 +115,31 @@ public class CommonUiSteps {
         categoriesPage.openCategories();
     }
 
+    /**
+     * Verify logout success message is displayed
+     */
+    @Then("user should see logout success message")
+    public void userShouldSeeLogoutSuccessMessage() {
+        WebElement logoutSuccessAlert = loginPage.getDriver().findElement(
+                org.openqa.selenium.By.cssSelector("div.alert.alert-success.text-center"));
+        String alertText = logoutSuccessAlert.getText().toLowerCase();
+        boolean hasSuccessMessage = alertText.contains("logged out successfully");
+        System.out
+                .println("[CommonUiSteps] Logout success alert found: " + hasSuccessMessage + " | Text: " + alertText);
+        assertTrue("Logout success message should be displayed", hasSuccessMessage);
+    }
+    
+    /**
+     * Verify user is redirected to login page
+     */
+    @Then("user should be redirected to login page")
+    public void userShouldBeRedirectedToLoginPage() {
+        String currentUrl = loginPage.getDriver().getCurrentUrl();
+        System.out.println("[CommonUiSteps] Checking redirect to login. Current URL: " + currentUrl);
+        assertTrue("User should be redirected to login page",
+                  currentUrl.contains(Constants.UrlPaths.UI_LOGIN) || 
+                  currentUrl.contains("/login"));
+    }
     // ==================== VERIFICATION STEPS ====================
     // Common assertions used across multiple feature files
 
@@ -145,17 +172,6 @@ public class CommonUiSteps {
         categoriesPage.verifyActiveMenuItem("sales");
     }
 
-    /**
-     * Verify user is redirected to login page
-     */
-    @Then("user should be redirected to login page")
-    public void userShouldBeRedirectedToLoginPage() {
-        String currentUrl = loginPage.getDriver().getCurrentUrl();
-        System.out.println("[CommonUiSteps] Checking redirect to login. Current URL: " + currentUrl);
-        assertTrue("User should be redirected to login page",
-                currentUrl.contains(Constants.UrlPaths.UI_LOGIN) ||
-                        currentUrl.contains("/login"));
-    }
 
     /**
      * Verify access denied page is displayed
@@ -163,21 +179,45 @@ public class CommonUiSteps {
     @Then("user should see access denied page")
     public void userShouldSeeAccessDeniedPage() {
         System.out.println("[CommonUiSteps] Checking for access denied page...");
-        
+
         // Check multiple indicators of access denied
         String currentUrl = loginPage.getDriver().getCurrentUrl();
         String pageSource = loginPage.getDriver().getPageSource().toLowerCase();
         String pageTitle = loginPage.getDriver().getTitle().toLowerCase();
-        
+
         boolean isAccessDenied = currentUrl.contains("access-denied") ||
-                                 currentUrl.contains("forbidden") ||
-                                 pageSource.contains("403 - access denied") ||
-                                 pageSource.contains("you do not have permission to access this page") ||
-                                 pageTitle.contains("access denied") ||
-                                 pageTitle.contains("forbidden");
-        
+                currentUrl.contains("forbidden") ||
+                pageSource.contains("403 - access denied") ||
+                pageSource.contains("you do not have permission to access this page") ||
+                pageTitle.contains("access denied") ||
+                pageTitle.contains("forbidden");
+
         System.out.println("[CommonUiSteps] Access denied detected: " + isAccessDenied);
         assertTrue("User should see access denied page", isAccessDenied);
+    }
+
+    /**
+     * Click the logout button
+     * Used by: Authentication tests (TC_AUTH_USR_UI_010)
+     * 
+     * Gherkin: When user clicks logout button
+     */
+    @When("user clicks logout button")
+    public void userClicksLogoutButton() {
+        System.out.println("[CommonUiSteps] Attempting to click logout button...");
+        try {
+            WebElement logoutBtn = loginPage.getDriver().findElement(
+                    org.openqa.selenium.By.cssSelector("a.nav-link.text-danger[href='/ui/logout']")
+            );
+            logoutBtn.click();
+            sleep(Constants.Timeouts.SHORT_WAIT * 1000);
+            System.out.println("[CommonUiSteps] Clicked logout button");
+        } catch (Exception e) {
+            // Fallback: navigate to logout URL directly
+            System.out.println("[CommonUiSteps] Logout button not found, navigating to logout URL");
+            loginPage.getDriver().get(config.getLogoutUrl());
+            sleep(Constants.Timeouts.SHORT_WAIT * 1000);
+        }
     }
 
     // ==================== HELPER METHODS ====================
