@@ -319,12 +319,23 @@ public class PlantsPage extends PageObject {
 
     public boolean isAccessDenied() {
         try {
-            return find(accessDeniedMessage).isVisible();
-        } catch (Exception e) {
+            String url = getDriver().getCurrentUrl().toLowerCase();
+            if (url.contains("/ui/login")) {
+                // Redirected to login = no permission
+                return true;
+            }
+            if (find(accessDeniedMessage).isVisible()) {
+                return true;
+            }
             String pageSource = getDriver().getPageSource().toLowerCase();
             return pageSource.contains("access denied") || pageSource.contains("403");
+        } catch (Exception e) {
+            String url = getDriver().getCurrentUrl().toLowerCase();
+            return url.contains("/ui/login");
         }
     }
+
+
 
     // pagination
 

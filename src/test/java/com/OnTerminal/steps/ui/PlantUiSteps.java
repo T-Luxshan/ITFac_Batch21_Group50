@@ -24,8 +24,9 @@ public class PlantUiSteps {
 
     private final String ADMIN_USER = "admin";
     private final String ADMIN_PASS = "admin123";
-    private final String NORMAL_USER = "user";
-    private final String NORMAL_PASS = "user123";
+    private final String NORMAL_USER = "testuser";
+    private final String NORMAL_PASS = "test123";
+
 
     private int initialPlantCount = 0;
     private String createdPlantName = null;
