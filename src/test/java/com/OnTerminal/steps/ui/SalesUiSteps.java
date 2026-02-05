@@ -1,5 +1,6 @@
 package com.OnTerminal.steps.ui;
 
+import com.OnTerminal.config.Constants;
 import com.OnTerminal.pages.CategoriesPage;
 import com.OnTerminal.pages.LoginPage;
 import com.OnTerminal.pages.PlantsPage;
@@ -75,7 +76,15 @@ public class SalesUiSteps {
     public void userEntersQuantityGreaterThanStock() {
         int quantityToEnter = originalStock + 100;
         salesPage.enterQuantity(String.valueOf(quantityToEnter));
-        System.out.println("TC_SALES_ADM_UI_002: Entered quantity " + quantityToEnter + " (stock is " + originalStock + ")");
+        System.out.println(
+                "TC_SALES_ADM_UI_002: Entered quantity " + quantityToEnter + " (stock is " + originalStock + ")");
+    }
+
+
+    @When("user searches for {string}")
+    public void userSearchesFor(String keyword) {
+        categoriesPage.searchByKeyword(keyword);
+        System.out.println("TC_CAT_USR_UI_008: Searched for '" + keyword + "'");
     }
 
     // ==================== Then Steps ====================
@@ -159,6 +168,22 @@ public class SalesUiSteps {
         assertFalse("TC_SEC_USR_UI_006: Sell Plant button should NOT be visible for User role",
                 salesPage.isSellPlantButtonVisible());
     }
+    
+    @Then("message {string} should be displayed")
+    public void messageShouldBeDisplayed(String expectedMessage) {
+        sleep(Constants.Timeouts.SHORT_WAIT * 1000); // Wait for search results
+        
+        System.out.println("TC_CAT_USR_UI_008: Looking for message containing: " + expectedMessage);
+        
+        // Check multiple ways the "no results" state can be displayed
+        boolean messageFound = categoriesPage.isNoResultsDisplayed(expectedMessage);
+        
+        System.out.println("TC_CAT_USR_UI_008: Message/empty state found: " + messageFound);
+
+        assertTrue("TC_CAT_USR_UI_008: Message '" + expectedMessage + "' should be displayed",
+                messageFound);
+    }
+
     
     // ==================== Helper Methods ====================
 

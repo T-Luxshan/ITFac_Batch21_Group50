@@ -104,6 +104,14 @@ public class CommonUiSteps {
         plantsPage.openEditPlantPage(plantId);
     }
 
+    /**
+     * Navigate to Categories page (alternative wording)
+     */
+    @When("user navigates to categories page")
+    public void userNavigatesToCategoriesPage() {
+        System.out.println("[CommonUiSteps] Navigating to categories page...");
+        categoriesPage.openCategories();
+    }
 
     // ==================== VERIFICATION STEPS ====================
     // Common assertions used across multiple feature files

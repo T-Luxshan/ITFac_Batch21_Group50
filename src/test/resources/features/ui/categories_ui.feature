@@ -70,3 +70,15 @@ Feature: Category Management UI (Group50)
     When user opens add category page
     And user clicks Cancel
     Then user should be on categories list page
+
+    
+  # ============================================
+  # USER CATEGORY UI TESTS
+  # ============================================
+
+  @TC_CAT_USR_UI_008 @user @IFHAM
+  Scenario: TC_CAT_USR_UI_008 - No category found message displays
+    Given user is logged in as "user"
+    When user navigates to categories page
+    And user searches for "XYZNONEXISTENT123"
+    Then message "No category found" should be displayed

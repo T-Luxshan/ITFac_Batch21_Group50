@@ -64,44 +64,19 @@ public class CategoriesPage extends PageObject {
         System.out.println("Current URL: " + getDriver().getCurrentUrl());
         System.out.println("Page title: " + getDriver().getTitle());
 
-        // Check if any input fields exist
-        int inputCount = findAll(By.cssSelector("input")).size();
-        System.out.println("Total input fields found: " + inputCount);
-
-        if (inputCount == 0) {
-            throw new AssertionError(
-                    "No input fields found on the page. The search functionality may not be available.");
-        }
-
         // Find search input using multiple possible selectors with wait
-        WebElementFacade searchInput = null;
-        try {
-            searchInput = findFirstPresentWithWait(
-                    By.cssSelector("input[type='search']"),
-                    By.cssSelector("input[placeholder*='Search']"),
-                    By.cssSelector("input[placeholder*='search']"),
-                    By.cssSelector("input[name='search']"),
-                    By.cssSelector("input[id*='search']"),
-                    By.cssSelector("input[class*='search']"),
-                    By.cssSelector("input[class*='Search']"),
-                    By.cssSelector("[role='searchbox']"),
-                    By.cssSelector("input[type='text']"),
-                    By.cssSelector("input"));
-        } catch (Exception e) {
-            System.out.println("Failed to find search input. Available inputs:");
-            findAll(By.cssSelector("input")).forEach(input -> {
-                System.out.println("  - type: " + input.getAttribute("type") +
-                        " | placeholder: " + input.getAttribute("placeholder") +
-                        " | class: " + input.getAttribute("class"));
-            });
-            throw new AssertionError("Search input field not found on the page", e);
-        }
+        WebElementFacade searchInput = find(By.name("name"));
 
         searchInput.clear();
         searchInput.type(keyword);
 
-        // Wait a moment for search to process (debounce/filter)
-        waitABit(1000);
+        // Click the Search button using XPath
+        WebElementFacade searchButton = find(By.xpath("//button[contains(@class, 'btn-primary') and contains(text(), 'Search')]"));
+        searchButton.click();
+        System.out.println("Clicked Search button after entering keyword: " + keyword);
+
+        // Wait for search results to load
+        waitABit(2000);
     }
 
     public boolean containsCategoryName(String categoryName) {
@@ -477,6 +452,31 @@ public class CategoriesPage extends PageObject {
         return (currentUrl.endsWith("/ui/categories") || currentUrl.endsWith("/ui/categories/"))
                 && isTableVisible();
     }
+
+    /**
+     * Check if no results/empty state is displayed after search
+     */
+    public boolean isNoResultsDisplayed(String expectedMessage) {
+        waitABit(1000);
+        
+        // Check for empty state row with colspan and text-center class
+        List<WebElementFacade> emptyStateRows = findAll(By.cssSelector("table tbody tr td.text-center.text-muted"));
+        System.out.println("[CategoriesPage] Found " + emptyStateRows.size() + " potential empty state rows");
+        
+        for (WebElementFacade cell : emptyStateRows) {
+            String cellText = cell.getText().trim().toLowerCase();
+            System.out.println("[CategoriesPage] Found empty state cell: " + cellText);
+            
+            if (cellText.contains("no") && (cellText.contains("found") || cellText.contains("category"))) {
+                System.out.println("[CategoriesPage] Empty state message found: " + cellText);
+                return true;
+            }
+        }
+             
+        System.out.println("[CategoriesPage] No empty/no-results state detected");
+        return false;
+    }
+
 
     public void sortBy(String columnName) {
         waitABit(1000);
