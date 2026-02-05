@@ -189,12 +189,6 @@ public class PlantsPage extends PageObject {
         // The step "Delete confirmation modal appears" will check for it.
     }
 
-    /**
-     * Keep the same method name because your Step uses it:
-     * It returns true if:
-     *  - A browser alert is present (your current app behavior), OR
-     *  - A Bootstrap modal is visible (if app changes in future)
-     */
     public boolean isDeleteModalVisible() {
         // Case 1: ALERT confirmation (your logs show this)
         if (isAlertPresent()) {
@@ -227,8 +221,6 @@ public class PlantsPage extends PageObject {
 
     /**
      * Confirm delete:
-     * - If alert is present -> accept it (THIS matches "Confirm the delete action")
-     * - Else click modal confirm
      */
     public void confirmDelete() {
         if (isAlertPresent()) {

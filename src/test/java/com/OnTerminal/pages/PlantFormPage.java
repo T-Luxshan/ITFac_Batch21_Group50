@@ -111,7 +111,6 @@ public class PlantFormPage extends PageObject {
         waitABit(1000);
     }
 
-    // ============ VERIFICATION METHODS (FIXED) ============
 
     public boolean isAddPlantPage() {
         try {
