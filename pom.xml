@@ -3,23 +3,46 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
+    <!-- ============================================ -->
+    <!-- Project Information - Group 50              -->
+    <!-- QA Training App Automation Suite            -->
+    <!-- Framework: Serenity BDD + Cucumber          -->
+    <!-- ============================================ -->
     <groupId>group50</groupId>
     <artifactId>serenity-ui-api</artifactId>
     <version>1.0-SNAPSHOT</version>
+    <packaging>jar</packaging>
+    
+    <name>QA Training App - Automation Suite</name>
+    <description>
+        Serenity BDD automation framework for UI and API testing.
+        Implements best practices from Lectures 10, 11, and 13.
+    </description>
 
     <properties>
-        <!-- Using the Serenity-recommended approach: set the version once and reuse it -->
-        <serenity.version>5.0.2</serenity.version>
+        <!-- ==================== Version Management ==================== -->
+        <!-- Best Practice: Single source for dependency versions -->
+        <!-- Using Serenity 4.2.x for stable REST Assured integration -->
+        <!-- Updated for Java 21 compatibility -->
+        <serenity.version>4.2.9</serenity.version>
+        <cucumber.version>7.18.1</cucumber.version>
+        <rest-assured.version>5.4.0</rest-assured.version>
+        <junit.version>4.13.2</junit.version>
+        <slf4j.version>2.0.9</slf4j.version>
+        
+        <!-- Java Version -->
         <maven.compiler.source>21</maven.compiler.source>
         <maven.compiler.target>21</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-
-        <!-- Cucumber version recommended in Serenity docs for this Serenity line -->
-        <cucumber.version>7.33.0</cucumber.version>
+        
+        <!-- Test Configuration -->
+        <parallel.tests>1</parallel.tests>
+        <webdriver.base.url>http://localhost:8080</webdriver.base.url>
+        <api.base.url>http://localhost:8080</api.base.url>
     </properties>
 
     <dependencies>
-        <!-- Serenity core -->
+        <!-- ==================== Serenity BDD Core ==================== -->
         <dependency>
             <groupId>net.serenity-bdd</groupId>
             <artifactId>serenity-core</artifactId>
@@ -27,7 +50,7 @@
             <scope>test</scope>
         </dependency>
 
-        <!-- Serenity + Cucumber -->
+        <!-- Serenity + Cucumber Integration -->
         <dependency>
             <groupId>net.serenity-bdd</groupId>
             <artifactId>serenity-cucumber</artifactId>
@@ -35,15 +58,45 @@
             <scope>test</scope>
         </dependency>
 
-        <!-- Serenity + Rest Assured -->
+        <!-- ==================== Serenity REST Assured ==================== -->
         <dependency>
             <groupId>net.serenity-bdd</groupId>
             <artifactId>serenity-rest-assured</artifactId>
             <version>${serenity.version}</version>
             <scope>test</scope>
+            <exclusions>
+                <exclusion>
+                    <groupId>io.rest-assured</groupId>
+                    <artifactId>rest-assured</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
 
-        <!-- Cucumber glue (keeps IDE happy even if transitives change) -->
+        <!-- Explicit REST Assured dependency for API testing -->
+        <dependency>
+            <groupId>io.rest-assured</groupId>
+            <artifactId>rest-assured</artifactId>
+            <version>${rest-assured.version}</version>
+            <scope>test</scope>
+        </dependency>
+
+        <!-- JSON Path for REST Assured -->
+        <dependency>
+            <groupId>io.rest-assured</groupId>
+            <artifactId>json-path</artifactId>
+            <version>${rest-assured.version}</version>
+            <scope>test</scope>
+        </dependency>
+
+        <!-- JSON Schema Validator for response validation -->
+        <dependency>
+            <groupId>io.rest-assured</groupId>
+            <artifactId>json-schema-validator</artifactId>
+            <version>${rest-assured.version}</version>
+            <scope>test</scope>
+        </dependency>
+
+        <!-- ==================== Cucumber Dependencies ==================== -->
         <dependency>
             <groupId>io.cucumber</groupId>
             <artifactId>cucumber-java</artifactId>
@@ -51,35 +104,120 @@
             <scope>test</scope>
         </dependency>
 
-        <!-- JUnit 4 runner used by CucumberWithSerenity (still supported, but deprecated in Serenity docs) -->
+        <dependency>
+            <groupId>io.cucumber</groupId>
+            <artifactId>cucumber-junit</artifactId>
+            <version>${cucumber.version}</version>
+            <scope>test</scope>
+        </dependency>
+
+        <!-- ==================== JUnit ==================== -->
         <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
-            <version>4.13.2</version>
+            <version>${junit.version}</version>
+            <scope>test</scope>
+        </dependency>
+
+        <!-- JUnit Vintage Engine - allows JUnit 4 tests to run on JUnit Platform -->
+        <dependency>
+            <groupId>org.junit.vintage</groupId>
+            <artifactId>junit-vintage-engine</artifactId>
+            <version>5.10.2</version>
+            <scope>test</scope>
+        </dependency>
+
+        <!-- ==================== Assertions Library ==================== -->
+        <dependency>
+            <groupId>org.assertj</groupId>
+            <artifactId>assertj-core</artifactId>
+            <version>3.24.2</version>
+            <scope>test</scope>
+        </dependency>
+
+        <!-- ==================== Logging ==================== -->
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+            <version>${slf4j.version}</version>
+        </dependency>
+        
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-simple</artifactId>
+            <version>${slf4j.version}</version>
             <scope>test</scope>
         </dependency>
     </dependencies>
 
     <build>
         <plugins>
+            <!-- ==================== Compiler Plugin ==================== -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.12.1</version>
+                <configuration>
+                    <source>${maven.compiler.source}</source>
+                    <target>${maven.compiler.target}</target>
+                    <encoding>UTF-8</encoding>
+                </configuration>
+            </plugin>
+
+            <!-- ==================== Surefire Plugin ==================== -->
+            <!-- Executes unit tests -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
                 <version>3.2.5</version>
                 <configuration>
-                    <!-- Include the Serenity/Cucumber runner class (ends with Suite) -->
-                    <includes>
-                        <include>**/*Test.java</include>
-                        <include>**/*Tests.java</include>
-                        <include>**/*TestCase.java</include>
-                        <include>**/*Suite.java</include>
-                    </includes>
+                    <skip>true</skip>
                 </configuration>
             </plugin>
+
+            <!-- ==================== Failsafe Plugin ==================== -->
+            <!-- Executes integration tests (Cucumber/Serenity) -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-failsafe-plugin</artifactId>
+                <version>3.2.5</version>
+                <configuration>
+                    <includes>
+                        <include>**/CucumberTestSuite.java</include>
+                        <include>**/*IT.java</include>
+                        <include>**/*Test.java</include>
+                    </includes>
+                    <testFailureIgnore>false</testFailureIgnore>
+                    <!-- JVM arguments for Java 21 compatibility with ByteBuddy/Serenity -->
+                    <argLine>
+                        --add-opens java.base/java.lang=ALL-UNNAMED
+                        --add-opens java.base/java.lang.reflect=ALL-UNNAMED
+                        --add-opens java.base/java.util=ALL-UNNAMED
+                    </argLine>
+                    <systemPropertyVariables>
+                        <webdriver.base.url>${webdriver.base.url}</webdriver.base.url>
+                        <api.base.url>${api.base.url}</api.base.url>
+                    </systemPropertyVariables>
+                </configuration>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>integration-test</goal>
+                            <goal>verify</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <!-- ==================== Serenity Maven Plugin ==================== -->
             <plugin>
                 <groupId>net.serenity-bdd.maven.plugins</groupId>
                 <artifactId>serenity-maven-plugin</artifactId>
                 <version>${serenity.version}</version>
+                <configuration>
+                    <tags>${tags}</tags>
+                    <reports>single-page-html</reports>
+                </configuration>
                 <executions>
                     <execution>
                         <id>serenity-reports</id>
@@ -92,4 +230,64 @@
             </plugin>
         </plugins>
     </build>
+
+    <!-- ==================== Build Profiles ==================== -->
+    <profiles>
+        <!-- Run UI tests only -->
+        <profile>
+            <id>ui-tests</id>
+            <properties>
+                <tags>@ui</tags>
+            </properties>
+        </profile>
+
+        <!-- Run API tests only -->
+        <profile>
+            <id>api-tests</id>
+            <properties>
+                <tags>@api</tags>
+            </properties>
+        </profile>
+
+        <!-- Run smoke tests only -->
+        <profile>
+            <id>smoke</id>
+            <properties>
+                <tags>@smoke</tags>
+            </properties>
+        </profile>
+
+        <!-- Run admin tests only -->
+        <profile>
+            <id>admin</id>
+            <properties>
+                <tags>@admin</tags>
+            </properties>
+        </profile>
+
+        <!-- Run user tests only -->
+        <profile>
+            <id>user</id>
+            <properties>
+                <tags>@user</tags>
+            </properties>
+        </profile>
+
+        <!-- Run security tests only -->
+        <profile>
+            <id>security</id>
+            <properties>
+                <tags>@security</tags>
+            </properties>
+        </profile>
+
+        <!-- Headless execution for CI/CD -->
+        <profile>
+            <id>headless</id>
+            <properties>
+                <webdriver.headless>true</webdriver.headless>
+            </properties>
+        </profile>
+    </profiles>
 </project>
+

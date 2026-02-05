@@ -1,0 +1,159 @@
+package com.OnTerminal.steps.ui;
+
+import com.OnTerminal.config.Constants;
+import com.OnTerminal.pages.CategoriesPage;
+import com.OnTerminal.pages.LoginPage;
+import com.OnTerminal.pages.PlantsPage;
+import com.OnTerminal.pages.SalesPage;
+import io.cucumber.java.en.Given;
+import io.cucumber.java.en.Then;
+import io.cucumber.java.en.When;
+import static org.junit.Assert.*;
+
+/**
+ * CommonUiSteps - Shared UI Step Definitions
+ * ==========================================
+ */
+public class CommonUiSteps {
+
+    // Page Objects - automatically injected by Serenity
+    LoginPage loginPage;
+    SalesPage salesPage;
+    PlantsPage plantsPage;
+    CategoriesPage categoriesPage;
+    
+    // ==================== CONFIGURATION ====================
+    private final com.OnTerminal.config.ConfigManager config =
+            com.OnTerminal.config.ConfigManager.getInstance();
+
+    /**
+     * Login as specified role (admin or user)
+     */
+    @Given("user is logged in as {string}")
+    public void userIsLoggedInAs(String role) {
+        System.out.println("[CommonUiSteps] Logging in as: " + role);
+        loginPage.loginAs(role);
+        System.out.println("[CommonUiSteps] Login complete. Current URL: " +
+                loginPage.getDriver().getCurrentUrl());
+    }
+
+    /**
+     * Clear user session - ensure not logged in
+     */
+    @Given("user is not logged in")
+    public void userIsNotLoggedIn() {
+        System.out.println("[CommonUiSteps] Clearing user session...");
+        try {
+            loginPage.getDriver().get(config.getLogoutUrl());
+            sleep(Constants.Timeouts.SHORT_WAIT * 1000);
+        } catch (Exception e) {
+            // If logout fails, clear cookies
+            loginPage.getDriver().manage().deleteAllCookies();
+        }
+        System.out.println("[CommonUiSteps] User session cleared - not logged in");
+    }
+
+    // ==================== NAVIGATION STEPS ====================
+
+    /**
+     * Navigate to Plants page
+     */
+    @Given("user navigates to plants page")
+    public void userNavigatesToPlantsPage() {
+        System.out.println("[CommonUiSteps] Navigating to plants page...");
+        plantsPage.openPlantsPage();
+    }
+
+    /**
+     * Navigate to Sell Plant page
+     */
+    @When("user navigates to sell plant page")
+    public void userNavigatesToSellPlantPage() {
+        System.out.println("[CommonUiSteps] Navigating to sell plant page...");
+        salesPage.openSellPlantPage();
+    }
+
+    /**
+     * Navigate directly to categories page (bypass navigation)
+     */
+    @When("user navigates directly to categories page")
+    public void userNavigatesDirectlyToCategoriesPage() {
+        System.out.println("[CommonUiSteps] Navigating DIRECTLY to categories page (URL access)...");
+        loginPage.getDriver().get(config.getCategoriesUrl());
+        sleep(Constants.Timeouts.SHORT_WAIT * 1000);
+    }
+
+    /**
+     * Navigate to Sales page
+     * Used by: Sales UI tests
+     * 
+     * Gherkin: When user navigates to sales page
+     */
+    @When("user navigates to sales page")
+    public void userNavigatesToSalesPage() {
+        System.out.println("[CommonUiSteps] Navigating to sales page...");
+        salesPage.openSalesPage();
+    }
+
+    /**
+     * Navigate directly to plant edit page
+     */
+    @When("user navigates directly to plant edit page with id {string}")
+    public void userNavigatesDirectlyToPlantEdit(String plantId) {
+        System.out.println("[CommonUiSteps] Navigating DIRECTLY to plant edit page ID: " + plantId);
+        plantsPage.openEditPlantPage(plantId);
+    }
+
+
+    // ==================== VERIFICATION STEPS ====================
+    // Common assertions used across multiple feature files
+
+    /**
+     * Verify user is redirected to login page
+     */
+    @Then("user should be redirected to login page")
+    public void userShouldBeRedirectedToLoginPage() {
+        String currentUrl = loginPage.getDriver().getCurrentUrl();
+        System.out.println("[CommonUiSteps] Checking redirect to login. Current URL: " + currentUrl);
+        assertTrue("User should be redirected to login page",
+                currentUrl.contains(Constants.UrlPaths.UI_LOGIN) ||
+                        currentUrl.contains("/login"));
+    }
+
+    /**
+     * Verify access denied page is displayed
+     */
+    @Then("user should see access denied page")
+    public void userShouldSeeAccessDeniedPage() {
+        System.out.println("[CommonUiSteps] Checking for access denied page...");
+        
+        // Check multiple indicators of access denied
+        String currentUrl = loginPage.getDriver().getCurrentUrl();
+        String pageSource = loginPage.getDriver().getPageSource().toLowerCase();
+        String pageTitle = loginPage.getDriver().getTitle().toLowerCase();
+        
+        boolean isAccessDenied = currentUrl.contains("access-denied") ||
+                                 currentUrl.contains("forbidden") ||
+                                 pageSource.contains("403 - access denied") ||
+                                 pageSource.contains("you do not have permission to access this page") ||
+                                 pageTitle.contains("access denied") ||
+                                 pageTitle.contains("forbidden");
+        
+        System.out.println("[CommonUiSteps] Access denied detected: " + isAccessDenied);
+        assertTrue("User should see access denied page", isAccessDenied);
+    }
+
+    // ==================== HELPER METHODS ====================
+
+    /**
+     * Helper method for waiting (thread sleep)
+     * @param millis milliseconds to wait
+     */
+    private void sleep(long millis) {
+        try {
+            Thread.sleep(millis);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
+    }
+}
