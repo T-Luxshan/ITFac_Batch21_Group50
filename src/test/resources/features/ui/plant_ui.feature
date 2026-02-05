@@ -30,7 +30,7 @@ Feature: Plant Management UI Tests
     When Navigate to Plants page
     And Locate an existing plant
     And Click on Edit button
-    And Change plant name to "Upda"
+    And Change plant name to "Update"
     And Change price to "7500"
     And Click Save
     Then Plant details are updated successfully

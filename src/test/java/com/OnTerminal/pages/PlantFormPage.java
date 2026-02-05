@@ -9,8 +9,6 @@ import java.util.List;
 
 public class PlantFormPage extends PageObject {
 
-    // ============ LOCATORS ============
-
     private By nameInput = By.name("name");
     private By categoryDropdown = By.name("categoryId");
     private By priceInput = By.name("price");
@@ -27,7 +25,6 @@ public class PlantFormPage extends PageObject {
 
     private By pageTitle = By.xpath("//h3[contains(text(), 'Add Plant')] | //h3[contains(text(), 'Edit Plant')]");
 
-    // ============ FORM METHODS ============
 
     public void enterName(String name) {
         WebElementFacade nameField = find(nameInput);

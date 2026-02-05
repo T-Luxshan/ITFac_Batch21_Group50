@@ -28,8 +28,14 @@ public class PlantUiSteps {
     private final String NORMAL_PASS = "user123";
 
     private int initialPlantCount = 0;
+    private String createdPlantName = null;
+    private String editedPlantName = null;
 
-    // ============ LOGIN ============
+    private String unique(String base) {
+        return base + "_" + System.currentTimeMillis();
+    }
+
+    // login
 
     @Given("Login as Admin for Plant UI")
     public void login_as_admin() {
@@ -43,7 +49,7 @@ public class PlantUiSteps {
         loginPage.login(NORMAL_USER, NORMAL_PASS);
     }
 
-    // ============ NAVIGATION ============
+    // navigation
 
     @When("Open Plant page")
     @When("Navigate to Plants page")
@@ -57,7 +63,7 @@ public class PlantUiSteps {
         assertTrue("Plant page header should be visible", plantsPage.isPlantsHeaderVisible());
     }
 
-    // ============ TC_PLANT_ADMIN_UI_001 ============
+    // TC_PLANT_ADMIN_UI_001
 
     @Then("Plants table should display with name price quantity and category columns")
     public void plants_table_should_display_with_all_columns() {
@@ -73,7 +79,7 @@ public class PlantUiSteps {
         assertTrue("Plant data should be present", plantsPage.getRowCount() >= 0);
     }
 
-    // ============ TC_PLANT_ADMIN_UI_002 - Add Plant (FIXED) ============
+    // TC_PLANT_ADMIN_UI_002
 
     @Then("Admin should see Add Plant button")
     public void admin_should_see_add_plant_button() {
@@ -87,7 +93,10 @@ public class PlantUiSteps {
 
     @When("Enter plant name {string}")
     public void enter_plant_name(String name) {
-        plantFormPage.enterName(name);
+        // make name unique every run
+        createdPlantName = unique(name);
+        plantFormPage.enterName(createdPlantName);
+        System.out.println("Using unique plant name: " + createdPlantName);
     }
 
     @When("Select category {string}")
@@ -117,21 +126,16 @@ public class PlantUiSteps {
 
     @Then("Plant is saved successfully")
     public void plant_is_saved_successfully() {
-        plantsPage.pause(3000);
+        plantsPage.pause(2500);
 
         String currentUrl = plantFormPage.getDriver().getCurrentUrl();
         System.out.println("=== After Save ===");
         System.out.println("Current URL: " + currentUrl);
 
-        // Simple check: if we're redirected away from the add/edit page, it's successful
-        boolean notOnFormPage = !currentUrl.contains("/plants/add") && !currentUrl.contains("/plants/edit");
-        boolean onPlantsPage = currentUrl.contains("/ui/plants");
+        boolean stillOnForm = currentUrl.contains("/plants/add") || currentUrl.contains("/plants/edit");
+        boolean onList = currentUrl.contains("/ui/plants") && !currentUrl.contains("/add") && !currentUrl.contains("/edit");
 
-        System.out.println("Not on form page: " + notOnFormPage);
-        System.out.println("On plants page: " + onPlantsPage);
-
-        // Only check for validation errors if still on form page
-        if (!notOnFormPage) {
+        if (stillOnForm) {
             if (plantFormPage.hasValidationError()) {
                 String error = plantFormPage.getValidationErrorMessage();
                 System.out.println("Validation error detected: " + error);
@@ -140,8 +144,7 @@ public class PlantUiSteps {
             throw new AssertionError("Still on form page after save, but no validation error detected");
         }
 
-        assertTrue("Should be redirected to plants list page after successful save",
-                notOnFormPage && onPlantsPage);
+        assertTrue("Should be redirected to plants list page after successful save", onList);
     }
 
     @Then("Success message is displayed")
@@ -153,38 +156,41 @@ public class PlantUiSteps {
         boolean hasMessage = plantsPage.hasSuccessMessage();
 
         System.out.println("Success check - On list page: " + onListPage + ", Has message: " + hasMessage);
-
         assertTrue("Should show success (redirected to list or success message)", onListPage || hasMessage);
     }
 
     @Then("User is redirected to plant list page")
     public void user_is_redirected_to_plant_list_page() {
-        plantsPage.pause(1000);
+        plantsPage.pause(800);
 
         String currentUrl = plantFormPage.getDriver().getCurrentUrl();
-        boolean onListPage = currentUrl.contains("/ui/plants") && !currentUrl.contains("/add") && !currentUrl.contains("/edit");
+        boolean onList = currentUrl.contains("/ui/plants") && !currentUrl.contains("/add") && !currentUrl.contains("/edit");
 
-        System.out.println("Redirect check - URL: " + currentUrl + ", On list: " + onListPage);
-
-        assertTrue("Should be redirected to plants list page", onListPage);
+        System.out.println("Redirect check - URL: " + currentUrl + ", On list: " + onList);
+        assertTrue("Should be redirected to plants list page", onList);
     }
 
     @Then("Newly added plant {string} appears in the list")
-    public void newly_added_plant_appears_in_list(String plantName) {
-        plantsPage.pause(1000);
+    public void newly_added_plant_appears_in_list(String ignoredFeatureValue) {
+        // Use the runtime-created unique name
+        if (createdPlantName == null || createdPlantName.isBlank()) {
+            throw new AssertionError("createdPlantName is null - did you skip 'Enter plant name' step?");
+        }
+
+        plantsPage.pause(800);
         plantsPage.openPlantsPage();
         plantsPage.pause(500);
-        plantsPage.searchByName(plantName);
-        plantsPage.pause(1500);
+        plantsPage.searchByName(createdPlantName);
+        plantsPage.pause(1200);
 
-        boolean found = plantsPage.isPlantInList(plantName);
-        System.out.println("Searching for plant '" + plantName + "': " + (found ? "FOUND" : "NOT FOUND"));
+        boolean found = plantsPage.isPlantInList(createdPlantName);
+        System.out.println("Searching for plant '" + createdPlantName + "': " + (found ? "FOUND" : "NOT FOUND"));
         System.out.println("Total rows in list: " + plantsPage.getRowCount());
 
-        assertTrue("Newly added plant '" + plantName + "' should appear in the list", found);
+        assertTrue("Newly added plant '" + createdPlantName + "' should appear in the list", found);
     }
 
-    // ============ TC_PLANT_ADMIN_UI_003 - Edit Plant ============
+    // TC_PLANT_ADMIN_UI_003 - Edit Plant
 
     @Given("At least one plant exists")
     public void at_least_one_plant_exists() {
@@ -207,7 +213,10 @@ public class PlantUiSteps {
 
     @When("Change plant name to {string}")
     public void change_plant_name(String newName) {
-        plantFormPage.enterName(newName);
+        // make edit name unique each run to avoid duplicate validation
+        editedPlantName = unique(newName);
+        plantFormPage.enterName(editedPlantName);
+        System.out.println("Using unique edited plant name: " + editedPlantName);
     }
 
     @When("Change price to {string}")
@@ -223,17 +232,27 @@ public class PlantUiSteps {
     @Then("Plant details are updated successfully")
     public void plant_details_are_updated_successfully() {
         plantsPage.pause(2000);
-        boolean success = plantsPage.isPlantsHeaderVisible() || plantsPage.hasSuccessMessage();
+
+        String url = plantFormPage.getDriver().getCurrentUrl();
+        boolean redirectedToList = url.contains("/ui/plants") && !url.contains("/edit");
+
+        boolean success = plantsPage.hasSuccessMessage() || plantsPage.isPlantsHeaderVisible() || redirectedToList;
+
+        if (!success && plantFormPage.hasValidationError()) {
+            String error = plantFormPage.getValidationErrorMessage();
+            throw new AssertionError("Update failed with validation error: " + error);
+        }
+
         assertTrue("Should show success after update", success);
     }
 
     @Then("Updated values are visible in plant list")
     public void updated_values_are_visible_in_plant_list() {
-        plantsPage.pause(1000);
+        plantsPage.pause(800);
         assertTrue("Should be on plant list", plantsPage.isPlantsHeaderVisible());
     }
 
-    // ============ TC_PLANT_ADMIN_UI_004 - Delete Plant ============
+    // TC_PLANT_ADMIN_UI_004 - Delete Plant
 
     @When("Click on Delete button for first plant")
     @When("Click Delete on first plant")
@@ -243,7 +262,7 @@ public class PlantUiSteps {
 
     @Then("Delete confirmation modal appears")
     public void delete_confirmation_modal_appears() {
-        assertTrue("Delete modal should be visible", plantsPage.isDeleteModalVisible());
+        assertTrue("Delete modal/alert should be visible", plantsPage.isDeleteModalVisible());
     }
 
     @When("Confirm the delete action")
@@ -263,7 +282,7 @@ public class PlantUiSteps {
         assertTrue("Plant list should load", currentCount >= 0);
     }
 
-    // ============ TC_PLANT_ADMIN_UI_005 - Validation ============
+    // TC_PLANT_ADMIN_UI_005 - Validation
 
     @When("Click Add Plant")
     public void click_add_plant() {
@@ -272,6 +291,7 @@ public class PlantUiSteps {
 
     @When("Enter valid plant name {string}")
     public void enter_valid_plant_name(String name) {
+        // keep as-is (validation test)
         plantFormPage.enterName(name);
     }
 
@@ -298,7 +318,7 @@ public class PlantUiSteps {
                 plantFormPage.isOnFormPage() || plantFormPage.isAddPlantPage());
     }
 
-    // ============ TC_PLANT_USER_UI_001 - User View ============
+    // TC_PLANT_USER_UI_001 - User View
 
     @Then("Only active plants are visible")
     public void only_active_plants_are_visible() {
@@ -311,7 +331,7 @@ public class PlantUiSteps {
         assertFalse("User should not see Add Plant button", plantsPage.isAddPlantButtonVisible());
     }
 
-    // ============ TC_PLANT_USER_UI_002 - Search ============
+    // TC_PLANT_USER_UI_002 - Search
 
     @When("Enter plant name {string} in search box")
     public void enter_plant_name_in_search_box(String name) {
@@ -333,14 +353,14 @@ public class PlantUiSteps {
         assertTrue("Only matching results should show", plantsPage.getRowCount() >= 0);
     }
 
-    // ============ TC_PLANT_USER_UI_003 - No Add Button ============
+    // normal user should not see add button
 
     @Then("User should not see Add Plant button")
     public void user_should_not_see_add_plant_button() {
         assertFalse("User must not see Add Plant button", plantsPage.isAddPlantButtonVisible());
     }
 
-    // ============ TC_PLANT_USER_UI_004 - Direct URL Access ============
+    // permission tests
 
     @When("Manually enter {string} in browser")
     public void manually_enter_url(String url) {
@@ -358,7 +378,7 @@ public class PlantUiSteps {
         assertTrue("Should show access denied", plantsPage.isAccessDenied());
     }
 
-    // ============ TC_PLANT_USER_UI_005 - Deleted Plants Not Visible ============
+    // deleted plant visibility tests
 
     @Given("Deleted plant exists")
     public void deleted_plant_exists() {
@@ -374,8 +394,6 @@ public class PlantUiSteps {
     public void only_active_plants_shown() {
         assertTrue("Active plants should be shown", plantsPage.getRowCount() >= 0);
     }
-
-    // ============ BACKWARD COMPATIBILITY ============
 
     @When("Admin adds a plant with name {string} price {string} qty {string}")
     public void admin_adds_a_plant(String name, String price, String qty) {
@@ -394,7 +412,7 @@ public class PlantUiSteps {
     @When("Admin tries delete first plant")
     public void admin_tries_delete_first_plant() {
         plantsPage.clickDeleteOnFirstRow();
-        assertTrue("Delete modal should appear", plantsPage.isDeleteModalVisible());
+        assertTrue("Delete modal/alert should appear", plantsPage.isDeleteModalVisible());
         plantsPage.confirmDelete();
     }
 
@@ -411,7 +429,7 @@ public class PlantUiSteps {
         }
         if (plantsPage.hasPrevButton()) {
             plantsPage.clickPrevPage();
-            assertTrue("After next page, plant page should load", plantsPage.isPlantsHeaderVisible());
+            assertTrue("After previous page, plant page should load", plantsPage.isPlantsHeaderVisible());
         }
     }
 

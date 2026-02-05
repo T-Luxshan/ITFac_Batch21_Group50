@@ -5,13 +5,12 @@ import net.serenitybdd.core.pages.WebElementFacade;
 import org.openqa.selenium.*;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
-
 import java.time.Duration;
 import java.util.List;
 
 public class PlantsPage extends PageObject {
 
-    // ============ LOCATORS ============
+    // locators
 
     // Page header
     private By plantsHeader = By.xpath("//h3[contains(text(), 'Plants')]");
@@ -26,7 +25,7 @@ public class PlantsPage extends PageObject {
     private By priceColumn = By.xpath("//table//thead//th[contains(., 'Price')]");
     private By stockColumn = By.xpath("//table//thead//th[contains(., 'Stock')]");
 
-    // Add Plant button (admin only)
+    // Add Plant button
     private By addPlantButton = By.xpath(
             "//a[contains(@href, '/ui/plants/add')] | //button[contains(text(), 'Add Plant')] | //a[contains(text(), 'Add Plant')]"
     );
@@ -39,7 +38,7 @@ public class PlantsPage extends PageObject {
     private By nextPageButton = By.xpath("//a[contains(text(), 'Next')] | //a[@rel='next']");
     private By prevPageButton = By.xpath("//a[contains(text(), 'Previous')] | //a[@rel='prev']");
 
-    // Delete modal (exists in DOM, but your app currently shows ALERT)
+    // Delete modal
     private By deleteModal = By.id("deleteModal");
     private By plantNameInModal = By.id("plantName");
 
@@ -56,8 +55,6 @@ public class PlantsPage extends PageObject {
             "(//a[contains(@href, '/ui/plants/edit/')])[1] | (//i[contains(@class, 'bi-pencil')]/..)[1]"
     );
 
-    // IMPORTANT: the button you are clicking triggers a JS alert ("Delete this plant?")
-    // Keep your original fallback selector for delete
     private By firstRowDeleteFallback = By.xpath(
             "(//form[contains(@action, '/ui/plants/delete/')]//button)[1] | (//i[contains(@class, 'bi-trash')]/..)[1]"
     );
@@ -71,7 +68,7 @@ public class PlantsPage extends PageObject {
             "//*[contains(text(), 'Access Denied') or contains(text(), 'access denied') or contains(text(), '403')]"
     );
 
-    // ============ PAGE METHODS ============
+  //page methods
 
     public void openPlantsPage() {
         String base = System.getProperty("webdriver.base.url", "http://localhost:8080");
@@ -94,7 +91,7 @@ public class PlantsPage extends PageObject {
         waitABit(milliseconds);
     }
 
-    // ============ VERIFICATION METHODS ============
+    // varification methods
 
     public boolean isPlantsHeaderVisible() {
         try {
@@ -136,7 +133,7 @@ public class PlantsPage extends PageObject {
         return getRowCount() > 0;
     }
 
-    // ============ ADMIN ACTIONS ============
+    // action of admin
 
     public boolean isAddPlantButtonVisible() {
         try {
@@ -167,11 +164,6 @@ public class PlantsPage extends PageObject {
         waitABit(1500);
     }
 
-    /**
-     * IMPORTANT FIX:
-     * DO NOT accept the alert here.
-     * Because the next step "Delete confirmation modal appears" needs to see it.
-     */
     public void clickDeleteOnFirstRow() {
         WebElementFacade deleteBtn = find(firstRowDeleteFallback);
 
@@ -185,8 +177,6 @@ public class PlantsPage extends PageObject {
             evaluateJavascript("arguments[0].click();", deleteBtn);
         }
 
-        // Do NOT accept alert here!
-        // The step "Delete confirmation modal appears" will check for it.
     }
 
     public boolean isDeleteModalVisible() {
@@ -196,7 +186,6 @@ public class PlantsPage extends PageObject {
             return true;
         }
 
-        // Case 2: Bootstrap modal confirmation (fallback)
         try {
             WebElementFacade modal = find(deleteModal);
             if (!modal.isPresent()) return false;
@@ -219,9 +208,7 @@ public class PlantsPage extends PageObject {
         return find(plantNameInModal).getText();
     }
 
-    /**
-     * Confirm delete:
-     */
+ //Confirm delete:
     public void confirmDelete() {
         if (isAlertPresent()) {
             acceptDeleteAlertIfPresent();
@@ -250,8 +237,6 @@ public class PlantsPage extends PageObject {
         waitABit(500);
     }
 
-    // ============ ALERT HELPERS ============
-
     private boolean isAlertPresent() {
         try {
             getDriver().switchTo().alert();
@@ -273,7 +258,7 @@ public class PlantsPage extends PageObject {
         }
     }
 
-    // ============ SEARCH/FILTER ============
+    // search and filter
 
     public void searchByName(String name) {
         WebElementFacade nameInput = find(nameFilterInput);
@@ -306,8 +291,6 @@ public class PlantsPage extends PageObject {
         }
     }
 
-    // ============ MESSAGES ============
-
     public boolean hasSuccessMessage() {
         try {
             return find(successMessage).isVisible();
@@ -332,7 +315,7 @@ public class PlantsPage extends PageObject {
         }
     }
 
-    // ============ ACCESS CONTROL ============
+    // control the access
 
     public boolean isAccessDenied() {
         try {
@@ -343,7 +326,7 @@ public class PlantsPage extends PageObject {
         }
     }
 
-    // ============ PAGINATION ============
+    // pagination
 
     public boolean hasNextButton() {
         try {
