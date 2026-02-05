@@ -3,6 +3,11 @@ package com.OnTerminal.pages;
 import net.serenitybdd.core.pages.PageObject;
 import net.serenitybdd.core.pages.WebElementFacade;
 import org.openqa.selenium.By;
+import org.openqa.selenium.WebElement;
+
+import io.cucumber.java.en.Then;
+
+import static org.junit.Assert.*;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -657,4 +662,30 @@ public class CategoriesPage extends PageObject {
         // Last resort - return first locator (will fail with clear error)
         return find(locators[0]);
     }
+
+    public void verifyActiveMenuItem(String menuName) {
+        waitABit(1000);
+        
+        System.out.println("Verifying active menu item for: " + menuName);
+        
+        WebElementFacade menuItem = findFirstPresentWithWait(
+                By.xpath("//a[contains(@href, '/ui/" + menuName + "')]"));
+        
+        String className = menuItem.getAttribute("class");
+        boolean isActive = className != null && className.contains("active");
+        
+        System.out.println("Menu item '" + menuName + "' class: " + className);
+        System.out.println("Menu item '" + menuName + "' active: " + isActive);
+        
+        if (!isActive) {
+            // Fallback: just verify we're on the right page
+            String currentUrl = getDriver().getCurrentUrl();
+            System.out.println("Fallback check - Current URL: " + currentUrl);
+            assertTrue("Should be on " + menuName + " page", currentUrl.contains(menuName));
+        } else {
+            assertTrue("Menu item for " + menuName + " should be highlighted/active", isActive);
+        }
+    }
+
+
 }

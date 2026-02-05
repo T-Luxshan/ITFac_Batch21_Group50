@@ -117,6 +117,35 @@ public class CommonUiSteps {
     // Common assertions used across multiple feature files
 
     /**
+     * Verify Categories menu item is highlighted/active
+     */
+    @Then("Categories menu item should be highlighted")
+    public void categoriesMenuItemShouldBeHighlighted() {
+        System.out.println("[CommonUiSteps] Verifying Categories menu item is highlighted...");
+        categoriesPage.verifyActiveMenuItem("categories");
+    }
+
+    /**
+     * Verify Plants menu item is highlighted/active
+     */
+    @Then("Plants menu item should be highlighted")
+    public void plantsMenuItemShouldBeHighlighted() {
+        System.out.println("[CommonUiSteps] Verifying Plants menu item is highlighted...");
+        // Using categoriesPage.verifyActiveMenuItem - centralized in CategoriesPage
+        categoriesPage.verifyActiveMenuItem("plants");
+    }
+
+    /**
+     * Verify Sales menu item is highlighted/active
+     */
+    @Then("Sales menu item should be highlighted")
+    public void salesMenuItemShouldBeHighlighted() {
+        System.out.println("[CommonUiSteps] Verifying Sales menu item is highlighted...");
+        // Using categoriesPage.verifyActiveMenuItem - centralized in CategoriesPage
+        categoriesPage.verifyActiveMenuItem("sales");
+    }
+
+    /**
      * Verify user is redirected to login page
      */
     @Then("user should be redirected to login page")

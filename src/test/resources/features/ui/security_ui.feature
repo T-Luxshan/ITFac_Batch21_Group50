@@ -23,3 +23,17 @@ Feature: Security UI Tests
     Given user is logged in as "user"
     When user navigates directly to plant edit page with id "1"
     Then user should see access denied page
+    
+  # ============================================
+  # NAVIGATION TESTS
+  # ============================================
+
+  @TC_NAV_USR_UI_009 @navigation @user @IFHAM
+  Scenario: TC_NAV_USR_UI_009 - Active navigation highlight
+    Given user is logged in as "user"
+    When user navigates to categories page
+    Then Categories menu item should be highlighted
+    When user navigates to plants page
+    Then Plants menu item should be highlighted
+    When user navigates to sales page
+    Then Sales menu item should be highlighted
