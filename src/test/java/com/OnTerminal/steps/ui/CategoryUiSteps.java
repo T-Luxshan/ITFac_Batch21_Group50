@@ -2,7 +2,6 @@ package com.OnTerminal.steps.ui;
 
 import com.OnTerminal.pages.CategoriesPage;
 import com.OnTerminal.pages.LoginPage;
-import io.cucumber.java.en.Given;
 import io.cucumber.java.en.Then;
 import io.cucumber.java.en.When;
 
@@ -13,15 +12,6 @@ public class CategoryUiSteps {
     // PageObjects are injected automatically by Serenity
     LoginPage loginPage;
     CategoriesPage categoriesPage;
-
-    @Given("user is logged in as {string}")
-    public void user_is_logged_in_as(String role) {
-        if (role.equalsIgnoreCase("admin")) {
-            loginPage.login("admin", "admin123");
-        } else {
-            loginPage.login("testuser", "test123");
-        }
-    }
 
     @When("user opens categories page")
     public void user_opens_categories_page() {
@@ -97,12 +87,6 @@ public class CategoryUiSteps {
     public void user_opens_add_category_page_directly() {
         categoriesPage.openAddCategoryPageDirectly();
         System.out.println("Attempted to access add category page directly");
-    }
-
-    @Then("user should see access denied page")
-    public void user_should_see_access_denied_page() {
-        assertTrue("User should see access denied page",
-                categoriesPage.isAccessDeniedPage());
     }
 
     @When("user sorts by {string}")

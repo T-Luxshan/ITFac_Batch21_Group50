@@ -1,5 +1,6 @@
 package com.OnTerminal.pages;
 
+import com.OnTerminal.config.Constants;
 import net.serenitybdd.core.pages.PageObject;
 import net.serenitybdd.core.pages.WebElementFacade;
 import org.openqa.selenium.By;
@@ -15,6 +16,19 @@ public class LoginPage extends PageObject {
         }
         String url = base.endsWith("/") ? base + "ui/login" : base + "/ui/login";
         openUrl(url);
+    }
+
+    /**
+     * Login as specified role using predefined credentials
+     */
+    public void loginAs(String role) {
+        if ("admin".equalsIgnoreCase(role)) {
+            login(Constants.Credentials.ADMIN_USERNAME, Constants.Credentials.ADMIN_PASSWORD);
+        } else if ("user".equalsIgnoreCase(role) || "testuser".equalsIgnoreCase(role)) {
+            login(Constants.Credentials.USER_USERNAME, Constants.Credentials.USER_PASSWORD);
+        } else {
+            throw new IllegalArgumentException("Unknown role for login: " + role);
+        }
     }
 
     public void login(String user, String pass) {
