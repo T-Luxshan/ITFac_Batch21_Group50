@@ -1,88 +1,55 @@
 package com.OnTerminal.steps.api;
 
-import io.cucumber.java.en.Given;
+
+import java.util.List;
+
+import com.OnTerminal.config.Constants;
+import com.OnTerminal.steps.BaseApiSteps;
 import io.cucumber.java.en.Then;
 import io.cucumber.java.en.When;
-import net.serenitybdd.rest.SerenityRest;
+import static org.junit.Assert.assertNotNull;
 
-public class CategoryApiSteps {
-
-    private static final String BASE = System.getProperty("api.base.url", "http://localhost:8080");
-
-    private String token;
-
-    @Given("api user is authenticated as {string}")
-    public void api_user_is_authenticated_as(String role) {
-        String username = role.equalsIgnoreCase("admin") ? "admin" : "testuser";
-        String password = role.equalsIgnoreCase("admin") ? "admin123" : "test123";
-
-        var response = SerenityRest.given()
-                .baseUri(BASE)
-                .contentType("application/json")
-                .body("{\"username\":\"" + username + "\",\"password\":\"" + password + "\"}")
-                .post("/api/auth/login")
-                .then()
-                .extract()
-                .response();
-
-        if (response.statusCode() != 200) {
-            System.out.println("Login failed for " + username + ": " + response.asString());
-        }
-
-        token = response.jsonPath().getString("token");
-        if (token == null)
-            token = response.jsonPath().getString("accessToken");
-        if (token == null)
-            token = response.jsonPath().getString("jwt");
-    }
+/**
+ * CategoryApiSteps - Step definitions for Category API tests
+ * Uses BaseApiSteps and Constants for configuration values
+ */
+public class CategoryApiSteps extends BaseApiSteps {
 
     @When("user sends GET {string}")
     public void user_sends_get(String endpoint) {
-        SerenityRest.given()
-                .baseUri(BASE)
-                .header("Authorization", "Bearer " + token)
-                .get(endpoint);
+        sendGet(endpoint);
     }
 
     @When("user creates unique category with name {string}")
     public void user_creates_unique_category_with_name(String name) {
         // Validation: Category name must be between 3 and 10 characters
-        // We use a shorter prefix if the name is too long, then add a 3-digit random
-        // suffix
         String prefix = name.length() > 6 ? name.substring(0, 6) : name;
         String uniqueName = prefix + (int) (Math.random() * 900 + 100);
 
-        SerenityRest.given()
-                .baseUri(BASE)
-                .header("Authorization", "Bearer " + token)
-                .contentType("application/json")
-                .body("{\"name\":\"" + uniqueName + "\"}")
-                .post("/api/categories");
+        sendPost(Constants.UrlPaths.API_CATEGORIES, "{\"name\":\"" + uniqueName + "\"}");
     }
 
     @When("user creates category with name {string}")
     public void user_creates_category_with_name(String name) {
-        SerenityRest.given()
-                .baseUri(BASE)
-                .header("Authorization", "Bearer " + token)
-                .contentType("application/json")
-                .body("{\"name\":\"" + name + "\"}")
-                .post("/api/categories");
+        sendPost(Constants.UrlPaths.API_CATEGORIES, "{\"name\":\"" + name + "\"}");
     }
 
     @When("user updates category id {int} with name {string}")
     public void user_updates_category_id_with_name(int id, String name) {
-        SerenityRest.given()
-                .baseUri(BASE)
-                .header("Authorization", "Bearer " + token)
-                .contentType("application/json")
-                .body("{\"name\":\"" + name + "\"}")
-                .put("/api/categories/" + id);
+        sendPut(Constants.UrlPaths.API_CATEGORIES + "/" + id, "{\"name\":\"" + name + "\"}");
     }
 
     @Then("response status should be {int}")
     public void response_status_should_be(Integer code) {
-        SerenityRest.then().statusCode(code);
+        verifyStatusCode(code);
     }
 
+    @Then("api response should contain sub-categories list")
+    public void apiResponseShouldContainSubCategoriesList() {
+        verifyResponseIsList();
+
+        List<?> categories = lastResponse.jsonPath().getList("$");
+        assertNotNull("TC_CAT_ADM_API_003: Response should contain categories list", categories);
+        System.out.println("Sub-categories list size: " + categories.size());
+    }
 }

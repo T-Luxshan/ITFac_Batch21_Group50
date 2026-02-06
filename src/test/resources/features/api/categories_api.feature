@@ -22,3 +22,10 @@ Feature: Category Management API (Group50)
     Given api user is authenticated as "user"
     When user updates category id 1 with name "NewName"
     Then response status should be 403
+
+  @TC_CAT_ADM_API_003 @admin @IFHAM
+  Scenario: TC_CAT_ADM_API_003 - Get all sub-categories endpoint works
+    Given api user authenticates as "admin"
+    When api user sends GET to "/api/categories/sub-categories"
+    Then api response status should be 200
+    And api response should contain sub-categories list
