@@ -1,5 +1,5 @@
 @ui @security
-Feature: Security UI Tests
+Feature: Security UI Tests (Group50)
   UI tests for authentication, authorization, navigation guards, and session management
 
   # ============================================
@@ -24,7 +24,7 @@ Feature: Security UI Tests
     When user navigates directly to plant edit page with id "1"
     Then user should see access denied page
 
-  @TC_AUTH_USR_UI_010 @auth @user
+  @TC_AUTH_USR_UI_010 @auth @user @IFHAM
   Scenario: TC_AUTH_USR_UI_010 - Logout shows success message
     Given user is logged in as "user"
     When user clicks logout button
