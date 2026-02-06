@@ -19,9 +19,10 @@ Feature: Security UI Tests (Group50)
     Then Sell Plant button should not be visible
 
   @TC_SEC_USR_UI_007 @authorization @user @negative @IFHAM
-  Scenario: TC_SEC_USR_UI_007 - User role blocked from Admin-only Plant Edit page
+  Scenario: TC_SEC_USR_UI_007 - User role blocked from Admin-only Category Edit page
     Given user is logged in as "user"
-    When user navigates directly to plant edit page with id "1"
+    And user gets a valid category id
+    When user navigates directly to category edit page with the valid category id
     Then user should see access denied page
 
   @TC_AUTH_USR_UI_010 @auth @user @IFHAM
