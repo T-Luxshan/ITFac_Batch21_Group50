@@ -16,6 +16,7 @@ public class PlantsApiSteps extends BaseApiSteps {
 
     private Integer plantId;
     private Integer originalQuantity;
+    private Integer categoryId;
 
     @Given("api user gets a valid plant id")
     public void apiUserGetsValidPlantId() {
@@ -39,6 +40,25 @@ public class PlantsApiSteps extends BaseApiSteps {
         }
 
         assertNotNull("Plant ID must be available for test", plantId);
+    }
+
+    @Given("api user gets a valid category id")
+    public void apiUserGetsAValidCategoryId() {
+        Response response = sendGet(Constants.UrlPaths.API_CATEGORIES);
+
+        if (response.statusCode() == Constants.StatusCodes.OK) {
+            List<Map<String, Object>> categories = response.jsonPath().getList("$");
+            if (categories != null && !categories.isEmpty()) {
+                Map<String, Object> firstCategory = categories.get(0);
+                categoryId = (Integer) firstCategory.get("id");
+                System.out.println("[PlantsApiSteps] Using category ID: " + categoryId);
+            }
+        }
+
+        if (categoryId == null) {
+            System.out.println("[PlantsApiSteps] No category found, using default ID: 1");
+            categoryId = 1;
+        }
     }
 
     @When("api user sends PUT to update plant with negative quantity")
@@ -80,6 +100,21 @@ public class PlantsApiSteps extends BaseApiSteps {
         }
     }
 
+    @When("api user sends GET to plants summary endpoint")
+    public void apiUserSendsGetToPlantsSummaryEndpoint() {
+        lastResponse = sendGet(Constants.UrlPaths.API_PLANTS + "/summary");
+        System.out.println("TC_PLANT_USR_API_009: Get plants summary response: "
+                + lastResponse.statusCode() + " - " + lastResponse.asString());
+    }
+
+    @When("api user sends GET to plants by category")
+    public void apiUserSendsGetToPlantsByCategory() {
+        assertNotNull("Category ID should be set", categoryId);
+        lastResponse = sendGet(Constants.UrlPaths.API_PLANTS + "/category/" + categoryId);
+        System.out.println("TC_PLANT_USR_API_006: Get plants by category response: "
+                + lastResponse.statusCode() + " - " + lastResponse.asString());
+    }
+
     @Then("plant quantity should remain unchanged")
     public void plantQuantityShouldRemainUnchanged() {
         assertNotNull("Plant ID should be set", plantId);
@@ -93,6 +128,28 @@ public class PlantsApiSteps extends BaseApiSteps {
 
         assertEquals("Plant quantity should remain unchanged",
                 originalQuantity.intValue(), currentQuantity);
+    }
+
+    @Then("api response should contain totalPlants")
+    public void apiResponseShouldContainTotalPlants() {
+        Object totalPlants = lastResponse.jsonPath().get("totalPlants");
+        assertNotNull("TC_PLANT_USR_API_009: Response should contain totalPlants", totalPlants);
+        System.out.println("Total plants: " + totalPlants);
+    }
+
+    @Then("api response should contain lowStockPlants")
+    public void apiResponseShouldContainLowStockPlants() {
+        Object lowStockPlants = lastResponse.jsonPath().get("lowStockPlants");
+        assertNotNull("TC_PLANT_USR_API_009: Response should contain lowStockPlants", lowStockPlants);
+        System.out.println("Low stock plants: " + lowStockPlants);
+    }
+
+    @Then("api response should contain plants list")
+    public void apiResponseShouldContainPlantsList() {
+        verifyResponseIsList();
+        List<?> plants = lastResponse.jsonPath().getList("$");
+        assertNotNull("TC_PLANT_USR_API_006: Response should contain plants list", plants);
+        System.out.println("Plants list size: " + plants.size());
     }
 
     private void createTestPlant() {
