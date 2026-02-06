@@ -29,3 +29,11 @@ Feature: Category Management API (Group50)
     When api user sends GET to "/api/categories/sub-categories"
     Then api response status should be 200
     And api response should contain sub-categories list
+
+  @TC_CAT_ADM_API_004 @admin @IFHAM
+  Scenario: TC_CAT_ADM_API_004 - Admin can delete category successfully
+    Given api user authenticates as "admin"
+    And api user creates a new category for deletion
+    When api user sends DELETE to delete the category
+    Then api response status should be 204
+    And category should be removed from system
