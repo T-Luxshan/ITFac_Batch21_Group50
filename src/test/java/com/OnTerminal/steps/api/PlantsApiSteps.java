@@ -133,14 +133,14 @@ public class PlantsApiSteps extends BaseApiSteps {
     @Then("api response should contain totalPlants")
     public void apiResponseShouldContainTotalPlants() {
         Object totalPlants = lastResponse.jsonPath().get("totalPlants");
-        assertNotNull("TC_PLANT_USR_API_009: Response should contain totalPlants", totalPlants);
+        assertNotNull("TC_PLANT_USR_API_009: Response should contain totalPlants ", totalPlants);
         System.out.println("Total plants: " + totalPlants);
     }
 
     @Then("api response should contain lowStockPlants")
     public void apiResponseShouldContainLowStockPlants() {
         Object lowStockPlants = lastResponse.jsonPath().get("lowStockPlants");
-        assertNotNull("TC_PLANT_USR_API_009: Response should contain lowStockPlants", lowStockPlants);
+        assertNotNull("TC_PLANT_USR_API_009: Response should contain lowStockPlants ", lowStockPlants);
         System.out.println("Low stock plants: " + lowStockPlants);
     }
 

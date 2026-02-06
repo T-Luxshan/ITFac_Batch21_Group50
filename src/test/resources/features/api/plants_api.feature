@@ -26,3 +26,11 @@ Feature: Plants Management API  (Group50)
     When api user sends GET to plants by category
     Then api response status should be 200
     And api response should contain plants list
+
+  @TC_PLANT_USR_API_009 @user @smoke @IFHAM
+  Scenario: TC_PLANT_USR_API_009 - Plants summary endpoint works
+    Given api user authenticates as "user"
+    When api user sends GET to plants summary endpoint
+    Then api response status should be 200
+    And api response should contain totalPlants
+    And api response should contain lowStockPlants
