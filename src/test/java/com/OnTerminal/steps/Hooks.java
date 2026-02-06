@@ -1,6 +1,7 @@
 package com.OnTerminal.steps;
 
 import com.OnTerminal.config.ConfigManager;
+import com.OnTerminal.utils.SoftAssertionCollector;
 import io.cucumber.java.After;
 import io.cucumber.java.Before;
 import io.cucumber.java.Scenario;
@@ -28,6 +29,7 @@ public class Hooks {
      */
     @Before(order = 1)
     public void setUp(Scenario scenario) {
+        SoftAssertionCollector.clear();
         logScenarioStart(scenario);
     }
 
@@ -81,11 +83,26 @@ public class Hooks {
      */
     @After(order = 1)
     public void tearDown(Scenario scenario) {
-        logScenarioEnd(scenario);
-        
-        if (scenario.isFailed()) {
+        boolean hasSoftFailures = SoftAssertionCollector.hasFailures();
+        boolean failed = scenario.isFailed() || hasSoftFailures;
+
+        if (hasSoftFailures) {
+            scenario.log(SoftAssertionCollector.summary());
+        }
+
+        logScenarioEnd(scenario, failed);
+
+        if (failed) {
             captureScreenshotOnFailure(scenario);
         }
+
+        if (!scenario.isFailed() && hasSoftFailures) {
+            String summary = SoftAssertionCollector.summary();
+            SoftAssertionCollector.clear();
+            throw new AssertionError(summary);
+        }
+
+        SoftAssertionCollector.clear();
     }
 
     /**
@@ -204,5 +221,12 @@ public class Hooks {
                 System.out.println("[Cleanup] Could not delete plant: " + e.getMessage());
             }
         }
+    }
+    private void logScenarioEnd(Scenario scenario, boolean failed) {
+        String status = failed ? "FAILED ?" : "PASSED";
+        System.out.println("\n" + "-".repeat(80));
+        System.out.println("SCENARIO END: " + scenario.getName());
+        System.out.println("Status: " + status);
+        System.out.println("-".repeat(80) + "\n");
     }
 }

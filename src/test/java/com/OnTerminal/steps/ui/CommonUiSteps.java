@@ -23,6 +23,8 @@ public class CommonUiSteps {
     SalesPage salesPage;
     PlantsPage plantsPage;
     CategoriesPage categoriesPage;
+
+    private String categoryId;
     
     // ==================== CONFIGURATION ====================
     private final com.OnTerminal.config.ConfigManager config =
@@ -104,6 +106,24 @@ public class CommonUiSteps {
     public void userNavigatesDirectlyToPlantEdit(String plantId) {
         System.out.println("[CommonUiSteps] Navigating DIRECTLY to plant edit page ID: " + plantId);
         plantsPage.openEditPlantPage(plantId);
+    }
+
+    @Given("user gets a valid category id")
+    public void userGetsAValidCategoryId() {
+        categoryId = categoriesPage.getFirstCategoryId();
+        if (categoryId == null) {
+            categoryId = "1";
+            System.out.println("[CommonUiSteps] No category ID found, using default: " + categoryId);
+        }
+    }
+
+    @When("user navigates directly to category edit page with the valid category id")
+    public void userNavigatesDirectlyToCategoryEditPageWithValidId() {
+        if (categoryId == null) {
+            userGetsAValidCategoryId();
+        }
+        System.out.println("[CommonUiSteps] Navigating DIRECTLY to category edit page ID: " + categoryId);
+        categoriesPage.openEditCategoryPage(categoryId);
     }
 
     /**
