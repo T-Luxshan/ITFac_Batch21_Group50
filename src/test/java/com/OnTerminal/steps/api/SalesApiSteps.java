@@ -25,13 +25,6 @@ public class SalesApiSteps extends BaseApiSteps {
     private Integer plantId;
     private Integer plantStock;
 
-    // ==================== Authentication Steps ====================
-
-    @Given("api user authenticates as {string}")
-    public void apiUserAuthenticatesAs(String role) {
-        authenticate(role);
-    }
-
     // ==================== Data Setup Steps ====================
 
     @Given("api user gets a valid plant id with stock")
@@ -106,7 +99,7 @@ public class SalesApiSteps extends BaseApiSteps {
         }
     }
 
-    // ==================== When Steps - Sales ====================
+    // =============== When Steps - Sales ====================
 
     @When("api user sends POST to sell plant with quantity {int}")
     public void apiUserSellsPlantWithQuantity(int quantity) {
@@ -164,5 +157,13 @@ public class SalesApiSteps extends BaseApiSteps {
         }
 
         assertTrue("Response should contain an expected error message", found);
+    }
+
+    @Then("api response should contain sales list")
+    public void apiResponseShouldContainSalesList() {
+        verifyResponseIsList();
+        List<?> sales = lastResponse.jsonPath().getList("$");
+        assertNotNull("Response should contain sales list", sales);
+        System.out.println("Sales list size: " + sales.size());
     }
 }
