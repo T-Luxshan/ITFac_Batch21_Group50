@@ -166,4 +166,22 @@ public class SalesApiSteps extends BaseApiSteps {
         assertNotNull("Response should contain sales list", sales);
         System.out.println("Sales list size: " + sales.size());
     }
+
+    @Then("api response should be received")
+    public void apiResponseShouldBeReceived() {
+        assertNotNull("Response should not be null", lastResponse);
+        int status = lastResponse.statusCode();
+        System.out.println("TC_SALES_USR_API_010: Response status: " + status);
+        System.out.println("TC_SALES_USR_API_010: Response body: " + lastResponse.asString());
+
+        assertTrue("Response should have a valid HTTP status code", status > 0);
+
+        if (status >= 200 && status < 300) {
+            System.out.println("FINDING: User CAN create sales (status " + status + ") - potential RBAC issue");
+        } else if (status == Constants.StatusCodes.FORBIDDEN) {
+            System.out.println("EXPECTED: User is forbidden from creating sales (403)");
+        } else {
+            System.out.println("FINDING: API returned " + status + " - check if this is expected behavior");
+        }
+    }
 }

@@ -19,3 +19,10 @@ Feature: Sales Management API  (Group50)
     Given api user has no authentication token
     When api user sends GET to "/api/categories/page?page=0&size=5" without token
     Then api response status should be 401
+
+  @TC_SALES_USR_API_010 @user @IFHAM
+  Scenario: TC_SALES_USR_API_010 - User sends sale request
+    Given api user authenticates as "user"
+    And api user gets a valid plant id with stock
+    When api user sends POST to sell plant with quantity 1
+    Then api response should be received

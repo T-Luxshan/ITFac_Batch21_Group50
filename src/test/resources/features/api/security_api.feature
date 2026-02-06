@@ -16,7 +16,7 @@ Feature: Security API Tests  (Group50)
   # TESTUSER TESTS
   # ============================================
 
-  @TC_SEC_USR_API_008 @user
+  @TC_SEC_USR_API_008 @user @IFHAM
   Scenario: TC_SEC_USR_API_008 - GET /api/categories/main returns only main categories
     Given api user authenticates as "user"
     When api user sends GET to "/api/categories/main"
