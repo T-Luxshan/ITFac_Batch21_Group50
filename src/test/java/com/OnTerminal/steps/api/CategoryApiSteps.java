@@ -70,6 +70,22 @@ public class CategoryApiSteps extends BaseApiSteps {
         System.out.println("TC_CAT_ADM_API_004: DELETE category response: " + lastResponse.statusCode());
     }
 
+    @When("user deletes category id {int}")
+    public void user_deletes_category_id(int id) {
+        lastResponse = sendDelete(Constants.UrlPaths.API_CATEGORIES + "/" + id);
+    }
+
+    @When("user requests category page {int} size {int} sort {string}")
+    public void user_requests_category_page_size_sort(int page, int size, String sort) {
+        logRequest("GET", Constants.UrlPaths.API_CATEGORIES);
+        lastResponse = authenticatedRequest()
+                .queryParam("page", page)
+                .queryParam("size", size)
+                .queryParam("sort", sort)
+                .get(Constants.UrlPaths.API_CATEGORIES);
+        logResponse(lastResponse);
+    }
+
     @Then("response status should be {int}")
     public void response_status_should_be(Integer code) {
         verifyStatusCode(code);

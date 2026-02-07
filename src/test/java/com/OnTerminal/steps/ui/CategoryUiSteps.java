@@ -5,6 +5,7 @@ import com.OnTerminal.pages.LoginPage;
 import io.cucumber.java.en.Given;
 import io.cucumber.java.en.Then;
 import io.cucumber.java.en.When;
+import net.thucydides.model.util.EnvironmentVariables;
 
 import static org.junit.Assert.assertTrue;
 
@@ -13,6 +14,7 @@ public class CategoryUiSteps {
     // PageObjects are injected automatically by Serenity
     LoginPage loginPage;
     CategoriesPage categoriesPage;
+    private EnvironmentVariables environmentVariables;
 
     @When("user opens categories page")
     public void user_opens_categories_page() {

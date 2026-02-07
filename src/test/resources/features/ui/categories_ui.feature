@@ -1,23 +1,27 @@
 Feature: Category Management UI (Group50)
 
+  @TC_CAT_001
   Scenario: TC_CAT_001 Verify categories list page loads with pagination
     Given user is logged in as "admin"
     When user opens categories page
     Then categories table should be visible
     And pagination controls should be visible
   
+  @TC_CAT_002
   Scenario: TC_CAT_002 Verify searching filters categories by name
     Given user is logged in as "admin"
     When user opens categories page
     And user searches category by keyword "Rose"
     Then results should contain category name "Rose"
   
+  @TC_CAT_003
   Scenario: TC_CAT_003 Verify filtering by parent category works
     Given user is logged in as "admin"
     When user opens categories page
     And user filters by parent category "Flowers"
     Then results should show only children of "Flowers"
   
+  @TC_CAT_004
   Scenario: TC_CAT_004 Verify admin can add category with valid name
     Given user is logged in as "admin"
     When user opens categories page
@@ -59,10 +63,10 @@ Feature: Category Management UI (Group50)
   Scenario: TC_CAT_009 Verify adding main category without parent
     Given user is logged in as "admin"
     When user opens add category page
-    And user enters category name "MainCat"
+    And user enters category name "MainUnique"
     And user leaves parent category empty
     And user saves category
-    Then category "MainCat" should be a main category
+    Then category "MainUnique" should be a main category
   
   @TC_CAT_010
   Scenario: TC_CAT_010 Verify Cancel button navigates back
