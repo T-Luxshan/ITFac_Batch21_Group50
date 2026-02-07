@@ -1,5 +1,6 @@
 package com.OnTerminal.steps.ui;
 
+import com.OnTerminal.pages.PlantsPage;
 import com.OnTerminal.pages.SalesPage;
 import io.cucumber.java.en.Given;
 import io.cucumber.java.en.Then;
@@ -15,6 +16,11 @@ public class SalesUiSteps {
 
     // Serenity auto-injects PageObjects
     SalesPage salesPage;
+    PlantsPage plantsPage;
+
+    // Temporary test state
+    private String notedPlantName;
+    private int notedStockQuantity;
 
     // ==================== Navigation Steps ====================
 
@@ -74,6 +80,11 @@ public class SalesUiSteps {
         salesPage.clickAddSale();
     }
 
+    @When("user clicks sell button")
+    public void clickSellButton() {
+        salesPage.saveSale();
+    }
+
     @When("user leaves plant empty")
     public void leavePlantEmpty() {
         salesPage.leavePlantEmpty();
@@ -106,9 +117,20 @@ public class SalesUiSteps {
         assertTrue("User should be on sales list page", salesPage.isAtSalesList());
     }
 
+    @Then("user should be redirected to sales list page")
+    public void verifyRedirectToSalesList() {
+        assertTrue("User should be redirected to sales list page", salesPage.isAtSalesList());
+    }
+
     @Then("no new sale should be created")
     public void verifyNoSaleCreated() {
         // Logical verification is covered by being back on the list page
+    }
+
+    @Then("error message should be displayed on the same page")
+    public void verifyErrorMessageSamePage() {
+        assertTrue("Error message should be displayed",
+                salesPage.isErrorMessageDisplayed() || salesPage.isValidationErrorVisible());
     }
 
     // ==================== Delete Steps ====================
@@ -145,4 +167,79 @@ public class SalesUiSteps {
     public void verifySalesMenu() {
         assertTrue("Sales menu should be active", salesPage.isSalesMenuActive());
     }
+
+    // ==================== New Steps for Stock & Dropdown ====================
+
+    @Given("user notes the stock quantity of first available plant")
+    public void noteFirstPlantStock() {
+        plantsPage.pause(1000); // Use public wrapper for waitABit
+        notedPlantName = plantsPage.getFirstPlantName();
+        plantsPage.recordStockOfFirstPlant();
+        notedStockQuantity = plantsPage.getRecordedStock(notedPlantName);
+        System.out.println("[Step] Noted plant: " + notedPlantName + " with stock: " + notedStockQuantity);
+    }
+
+    @When("user selects the noted plant from dropdown")
+    public void selectNotedPlant() {
+        if (notedPlantName == null) {
+            throw new RuntimeException("No plant was noted in previous steps!");
+        }
+        salesPage.selectPlantByName(notedPlantName);
+    }
+
+    @Then("the stock quantity should be reduced by {int}")
+    public void verifyStockReduced(int amount) {
+        if (notedPlantName == null) {
+            // If notedPlantName is null, try to find the one we modified based on recent
+            // activity or just use first one if we can't
+            plantsPage.recordStockOfFirstPlant(); // Re-record? No.
+            // Without noting, we can't verify reduction properly unless we know WHICH
+            // plant.
+            throw new RuntimeException("Cannot verify stock reduction: No plant was noted.");
+        }
+
+        int currentStock = plantsPage.getCurrentStock(notedPlantName);
+        int expectedStock = notedStockQuantity - amount;
+
+        System.out.println("[Step] Verifying stock for " + notedPlantName +
+                ": Initial=" + notedStockQuantity +
+                ", Current=" + currentStock +
+                ", Expected=" + expectedStock);
+
+        assertEquals("Stock quantity should be reduced by " + amount, expectedStock, currentStock);
+    }
+
+    @Given("user finds a plant with low stock")
+    public void findLowStockPlantStep() {
+        notedPlantName = plantsPage.findLowStockPlant();
+        notedStockQuantity = plantsPage.getRecordedStock(notedPlantName);
+        System.out.println("[Step] Found low stock plant: " + notedPlantName + " (" + notedStockQuantity + ")");
+    }
+
+    @When("user selects the low stock plant from dropdown")
+    public void selectLowStockPlant() {
+        if (notedPlantName == null)
+            throw new RuntimeException("No low stock plant found!");
+        salesPage.selectPlantByName(notedPlantName);
+    }
+
+    @When("user enters quantity greater than available stock")
+    public void enterExcessQuantity() {
+        int excessQty = notedStockQuantity + 5;
+        salesPage.enterQuantity(String.valueOf(excessQty));
+        System.out.println("[Step] Entered excess quantity: " + excessQty);
+    }
+
+    @Then("dropdown should display available plants")
+    public void verifyDropdownContent() {
+        assertTrue("Dropdown should be visible", salesPage.isDropdownVisible());
+        assertFalse("Dropdown should have options", salesPage.getDropdownOptions().isEmpty());
+    }
+
+    @Then("plants should be selectable")
+    public void verifyPlantsSelectable() {
+        // If dropdown has options > 1 (excluding placeholder), it's selectable
+        assertTrue("Plants should be selectable", salesPage.getDropdownOptions().size() > 1);
+    }
+
 }
