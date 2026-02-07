@@ -122,12 +122,20 @@ public class CategoriesPage extends PageObject {
 
         // Try to select the option
         try {
-            filterElement.selectByVisibleText(parentCategory);
+            if (filterElement.getTagName().equalsIgnoreCase("select")) {
+                filterElement.selectByVisibleText(parentCategory);
+            } else {
+                throw new RuntimeException("Not a select element");
+            }
             System.out.println("Selected parent category from dropdown: " + parentCategory);
         } catch (Exception e) {
             // If it's not a select element, try clicking and typing
-            System.out.println("Not a select element, trying alternative approach");
-            filterElement.click();
+            System.out.println("Not a select element or select failed, trying alternative approach");
+            try {
+                filterElement.click();
+            } catch (Exception clickEx) {
+                // Ignore click error
+            }
             waitABit(500);
             filterElement.type(parentCategory);
             waitABit(500);
@@ -221,8 +229,7 @@ public class CategoriesPage extends PageObject {
                 By.cssSelector("input[id*='Name']"),
                 By.cssSelector("input[placeholder*='name']"),
                 By.cssSelector("input[placeholder*='Name']"),
-                By.cssSelector("input[type='text']"),
-                By.cssSelector("input"));
+                By.cssSelector("input[type='text']")); // Removed broad input selector
 
         nameInput.clear();
         nameInput.type(categoryName);
@@ -244,13 +251,17 @@ public class CategoriesPage extends PageObject {
 
         // Try to select the first option (often "Select Parent", "None", or empty)
         try {
-            parentSelect.selectByIndex(0);
-            System.out.println("Selected first option from parent dropdown (assuming empty/none)");
-        } catch (Exception e) {
-            System.out.println("Could not select by index, trying to click and clear if it's an input");
-            if (parentSelect.getTagName().equalsIgnoreCase("input")) {
-                parentSelect.clear();
+            if (parentSelect.getTagName().equalsIgnoreCase("select")) {
+                parentSelect.selectByIndex(0);
+                System.out.println("Selected first option from parent dropdown (assuming empty/none)");
+            } else {
+                if (parentSelect.getTagName().equalsIgnoreCase("input")) {
+                    parentSelect.clear();
+                    System.out.println("Cleared parent input");
+                }
             }
+        } catch (Exception e) {
+            System.out.println("Could not select/clear parent category: " + e.getMessage());
         }
     }
 
@@ -493,14 +504,21 @@ public class CategoriesPage extends PageObject {
             System.out.println("- " + h.getText());
         }
 
+        String lowerColumn = columnName.toLowerCase();
+        // XPath 1.0 case-insensitive text check
+        String xpathCaseInsensitive = "translate(., 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz')";
+
         // Try to find header - specifically look for sortable indicators or buttons
         // inside
         WebElementFacade header = findFirstPresentWithWait(
-                By.xpath("//th[contains(., '" + columnName + "')]"),
-                By.xpath("//th[contains(., '" + columnName.replace(" Category", "") + "')]"),
-                By.xpath("//div[@role='columnheader' and contains(., '" + columnName + "')]"),
-                By.xpath("//div[@role='columnheader' and contains(., '" + columnName.replace(" Category", "") + "')]"),
-                By.xpath("//span[contains(text(), '" + columnName + "')]"));
+                By.xpath("//th[contains(" + xpathCaseInsensitive + ", '" + lowerColumn + "')]"),
+                By.xpath(
+                        "//th[contains(" + xpathCaseInsensitive + ", '" + lowerColumn.replace(" category", "") + "')]"),
+                By.xpath("//div[@role='columnheader' and contains(" + xpathCaseInsensitive + ", '" + lowerColumn
+                        + "')]"),
+                By.xpath("//div[@role='columnheader' and contains(" + xpathCaseInsensitive + ", '"
+                        + lowerColumn.replace(" category", "") + "')]"),
+                By.xpath("//span[contains(" + xpathCaseInsensitive + ", '" + lowerColumn + "')]"));
 
         System.out.println("Found header: " + header.getText());
 
@@ -515,25 +533,25 @@ public class CategoriesPage extends PageObject {
 
             // Re-find because the first click might refresh the page/table
             try {
-                header = findFirstPresentWithWait(
-                        By.xpath("//th[contains(., '" + columnName + "')]"),
-                        By.xpath("//th[contains(., '" + columnName.replace(" Category", "") + "')]"));
+                // Simple re-find
+                header = find(By.xpath("//th[contains(" + xpathCaseInsensitive + ", '" + lowerColumn + "')]"));
                 innerClickables = header.findElements(innerSelector);
                 if (!innerClickables.isEmpty()) {
                     innerClickables.get(0).click();
+                } else {
+                    header.click();
                 }
             } catch (Exception e) {
-                System.out.println("Could not perform second click: " + e.getMessage());
+                System.out.println("Could not perform second click (probably okay if sorted): " + e.getMessage());
             }
         } else {
             header.click();
             waitABit(1500);
             try {
-                header = findFirstPresentWithWait(
-                        By.xpath("//th[contains(., '" + columnName + "')]"),
-                        By.xpath("//th[contains(., '" + columnName.replace(" Category", "") + "')]"));
+                header = find(By.xpath("//th[contains(" + xpathCaseInsensitive + ", '" + lowerColumn + "')]"));
                 header.click();
             } catch (Exception e) {
+                // Ignore
             }
         }
 
