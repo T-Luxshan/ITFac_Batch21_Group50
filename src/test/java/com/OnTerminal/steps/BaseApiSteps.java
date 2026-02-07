@@ -6,9 +6,6 @@ import io.restassured.response.Response;
 import io.restassured.specification.RequestSpecification;
 import net.serenitybdd.rest.SerenityRest;
 
-import java.util.HashMap;
-import java.util.Map;
-
 /**
  * BaseApiSteps - Foundation for All API Step Definitions
  * ========================================================
@@ -23,7 +20,6 @@ public abstract class BaseApiSteps {
     // Test state shared across step definitions
     protected static String authToken;
     protected static Response lastResponse;
-    protected static Map<String, Object> testData = new HashMap<>();
 
     // ==================== Authentication Methods ====================
 
@@ -151,16 +147,6 @@ public abstract class BaseApiSteps {
     }
 
     /**
-     * Send POST request without authentication
-     */
-    protected Response sendPostNoAuth(String endpoint, Object body) {
-        logRequest("POST (No Auth)", endpoint, body);
-        lastResponse = unauthenticatedRequest().body(body).post(endpoint);
-        logResponse(lastResponse);
-        return lastResponse;
-    }
-
-    /**
      * Send PUT request (Update)
      */
     protected Response sendPut(String endpoint, Object body) {
@@ -196,43 +182,10 @@ public abstract class BaseApiSteps {
     }
 
     /**
-     * Verify response contains field
-     */
-    protected void verifyResponseContainsField(String fieldPath) {
-        Object value = lastResponse.jsonPath().get(fieldPath);
-        assert value != null : "Response should contain field: " + fieldPath;
-    }
-
-    /**
-     * Get response field value
-     */
-    protected <T> T getResponseField(String fieldPath, Class<T> type) {
-        return lastResponse.jsonPath().getObject(fieldPath, type);
-    }
-
-    /**
      * Verify response is a list
      */
     protected void verifyResponseIsList() {
         assert lastResponse.jsonPath().getList("$") != null : "Response should be a list";
-    }
-
-    /**
-     * Verify response is not empty list
-     */
-    protected void verifyResponseIsNotEmptyList() {
-        assert !lastResponse.jsonPath().getList("$").isEmpty() : "Response list should not be empty";
-    }
-
-    // ==================== Status Code Verification ====================
-
-    /**
-     * Verify success status (2xx)
-     */
-    protected void verifySuccessStatus() {
-        int code = lastResponse.statusCode();
-        assert code >= 200 && code < 300 : 
-            "Expected success status (2xx) but got " + code;
     }
 
     /**
@@ -242,41 +195,6 @@ public abstract class BaseApiSteps {
         int code = lastResponse.statusCode();
         assert code >= 400 : 
             "Expected error status (4xx/5xx) but got " + code;
-    }
-
-    /**
-     * Verify client error status (4xx)
-     */
-    protected void verifyClientErrorStatus() {
-        int code = lastResponse.statusCode();
-        assert code >= 400 && code < 500 : 
-            "Expected client error status (4xx) but got " + code;
-    }
-
-    // ==================== Test Data Management ====================
-
-    /**
-     * Store test data for later use
-     */
-    protected void storeTestData(String key, Object value) {
-        testData.put(key, value);
-        System.out.println("[TestData] Stored: " + key + " = " + value);
-    }
-
-    /**
-     * Retrieve stored test data
-     */
-    @SuppressWarnings("unchecked")
-    protected <T> T getTestData(String key) {
-        return (T) testData.get(key);
-    }
-
-    /**
-     * Clear all test data
-     */
-    protected void clearTestData() {
-        testData.clear();
-        System.out.println("[TestData] Cleared all test data");
     }
 
     // ==================== Logging Methods ====================

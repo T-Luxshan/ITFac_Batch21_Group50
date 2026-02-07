@@ -89,10 +89,6 @@ public class ConfigManager {
         return getBaseUrl() + "/ui/login";
     }
 
-    public String getDashboardUrl() {
-        return getBaseUrl() + "/ui/dashboard";
-    }
-
     public String getCategoriesUrl() {
         return getBaseUrl() + "/ui/categories";
     }
@@ -109,62 +105,18 @@ public class ConfigManager {
         return getBaseUrl() + "/ui/sales/new";
     }
 
-    public String getAddPlantUrl() {
-        return getBaseUrl() + "/ui/plants/add";
-    }
-
     public String getEditPlantUrl(String plantId) {
         return getBaseUrl() + "/ui/plants/edit/" + plantId;
-    }
-
-    public String getAddCategoryUrl() {
-        return getBaseUrl() + "/ui/categories/add";
     }
 
     public String getLogoutUrl() {
         return getBaseUrl() + "/ui/logout";
     }
 
-    // ==================== API Endpoints ====================
-
-    public String getAuthEndpoint() {
-        return "/api/auth/login";
-    }
-
-    public String getCategoriesEndpoint() {
-        return "/api/categories";
-    }
-
-    public String getPlantsEndpoint() {
-        return "/api/plants";
-    }
-
-    public String getSalesEndpoint() {
-        return "/api/sales";
-    }
-
-    // ==================== Timeout Configuration ====================
-
-    public int getDefaultTimeout() {
-        return getIntProperty("webdriver.wait.timeout", 10);
-    }
-
-    public int getPageLoadTimeout() {
-        return getIntProperty("webdriver.pageload.timeout", 30);
-    }
-
-    public int getImplicitWait() {
-        return getIntProperty("webdriver.implicit.wait", 5);
-    }
-
     // ==================== Browser Configuration ====================
 
     public String getBrowser() {
         return getProperty("webdriver.driver", "chrome");
-    }
-
-    public boolean isHeadless() {
-        return Boolean.parseBoolean(getProperty("webdriver.headless", "false"));
     }
 
     // ==================== Utility Methods ====================
@@ -177,19 +129,5 @@ public class ConfigManager {
     public String getProperty(String key, String defaultValue) {
         String value = getProperty(key);
         return value != null ? value : defaultValue;
-    }
-
-    public int getIntProperty(String key, int defaultValue) {
-        String value = getProperty(key);
-        try {
-            return value != null ? Integer.parseInt(value) : defaultValue;
-        } catch (NumberFormatException e) {
-            return defaultValue;
-        }
-    }
-
-    public boolean getBooleanProperty(String key, boolean defaultValue) {
-        String value = getProperty(key);
-        return value != null ? Boolean.parseBoolean(value) : defaultValue;
     }
 }

@@ -38,7 +38,7 @@ public class Hooks {
      * Prepares browser settings
      */
     @Before(value = "@ui", order = 2)
-    public void setUpUi(Scenario scenario) {
+    public void setUpUi() {
         System.out.println("[Setup] Configuring UI test environment...");
         System.out.println("[Setup] Base URL: " + config.getBaseUrl());
         System.out.println("[Setup] Browser: " + config.getBrowser());
@@ -49,7 +49,7 @@ public class Hooks {
      * Clears any previous API state
      */
     @Before(value = "@api", order = 2)
-    public void setUpApi(Scenario scenario) {
+    public void setUpApi() {
         System.out.println("[Setup] Configuring API test environment...");
         System.out.println("[Setup] API Base URL: " + config.getApiBaseUrl());
         // Clear any stored tokens from previous tests
@@ -62,7 +62,7 @@ public class Hooks {
      * Smoke tests are critical paths
      */
     @Before(value = "@smoke", order = 3)
-    public void setUpSmoke(Scenario scenario) {
+    public void setUpSmoke() {
         System.out.println("[Setup] This is a SMOKE test - Critical path validation");
     }
 
@@ -71,7 +71,7 @@ public class Hooks {
      * Security tests may need special handling
      */
     @Before(value = "@security", order = 3)
-    public void setUpSecurity(Scenario scenario) {
+    public void setUpSecurity() {
         System.out.println("[Setup] This is a SECURITY test - Authentication/Authorization testing");
     }
 
@@ -110,7 +110,7 @@ public class Hooks {
      * Cleans up browser state
      */
     @After(value = "@ui", order = 2)
-    public void tearDownUi(Scenario scenario) {
+    public void tearDownUi() {
         System.out.println("[Teardown] Cleaning up UI test state...");
         
         // Clear cookies and session storage
@@ -130,15 +130,11 @@ public class Hooks {
      * Cleans up API test data
      */
     @After(value = "@api", order = 2)
-    public void tearDownApi(Scenario scenario) {
+    public void tearDownApi() {
         System.out.println("[Teardown] Cleaning up API test state...");
-        
-        // Clean up any test data created during the test
-        cleanUpTestData();
-        
+
         // Clear stored state
         BaseApiSteps.authToken = null;
-        BaseApiSteps.testData.clear();
     }
 
     /**
@@ -146,7 +142,7 @@ public class Hooks {
      * Admin tests may create data that needs cleanup
      */
     @After(value = "@admin", order = 3)
-    public void tearDownAdmin(Scenario scenario) {
+    public void tearDownAdmin() {
         System.out.println("[Teardown] Admin test cleanup...");
         // Add specific cleanup for admin-created resources if needed
     }
@@ -165,17 +161,6 @@ public class Hooks {
     }
 
     /**
-     * Log scenario end with status
-     */
-    private void logScenarioEnd(Scenario scenario) {
-        String status = scenario.isFailed() ? "FAILED ❌" : "PASSED ✓";
-        System.out.println("\n" + "-".repeat(80));
-        System.out.println("SCENARIO END: " + scenario.getName());
-        System.out.println("Status: " + status);
-        System.out.println("-".repeat(80) + "\n");
-    }
-
-    /**
      * Capture screenshot on failure
      */
     private void captureScreenshotOnFailure(Scenario scenario) {
@@ -191,39 +176,8 @@ public class Hooks {
         }
     }
 
-    /**
-     * Clean up test data created during API tests
-     */
-    private void cleanUpTestData() {
-        // Get IDs of resources created during test
-        Integer createdCategoryId = BaseApiSteps.testData.get("createdCategoryId") instanceof Integer 
-            ? (Integer) BaseApiSteps.testData.get("createdCategoryId") : null;
-        Integer createdPlantId = BaseApiSteps.testData.get("createdPlantId") instanceof Integer 
-            ? (Integer) BaseApiSteps.testData.get("createdPlantId") : null;
-
-        // Clean up created categories
-        if (createdCategoryId != null) {
-            try {
-                System.out.println("[Cleanup] Deleting test category ID: " + createdCategoryId);
-                // Note: In a real implementation, you would call the delete API here
-                // This is a placeholder for the cleanup logic
-            } catch (Exception e) {
-                System.out.println("[Cleanup] Could not delete category: " + e.getMessage());
-            }
-        }
-
-        // Clean up created plants
-        if (createdPlantId != null) {
-            try {
-                System.out.println("[Cleanup] Deleting test plant ID: " + createdPlantId);
-                // Note: In a real implementation, you would call the delete API here
-            } catch (Exception e) {
-                System.out.println("[Cleanup] Could not delete plant: " + e.getMessage());
-            }
-        }
-    }
     private void logScenarioEnd(Scenario scenario, boolean failed) {
-        String status = failed ? "FAILED ?" : "PASSED";
+        String status = failed ? "FAILED" : "PASSED";
         System.out.println("\n" + "-".repeat(80));
         System.out.println("SCENARIO END: " + scenario.getName());
         System.out.println("Status: " + status);
