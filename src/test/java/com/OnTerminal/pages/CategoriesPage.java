@@ -623,6 +623,15 @@ public class CategoriesPage extends PageObject {
         return ascending || descending;
     }
 
+    public boolean isValidationErrorVisible() {
+        // Detects common validation error indicators in different UI frameworks
+        return !findAll(
+                By.cssSelector(".invalid-feedback, .text-danger, .alert-danger, .error-message, .alert-warning"))
+                .isEmpty() ||
+                getDriver().getPageSource().contains("already exists") ||
+                getDriver().getPageSource().contains("must not be empty");
+    }
+
     private WebElementFacade findFirstPresent(By... locators) {
         for (By by : locators) {
             if (!findAll(by).isEmpty()) {

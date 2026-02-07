@@ -160,4 +160,11 @@ public class CategoryUiSteps {
         assertTrue("User should be on categories list page",
                 categoriesPage.isAtCategoriesList());
     }
+
+    @Then("validation error should be shown on categories page")
+    public void verifyCatValidationError() {
+        assertTrue("Validation error should be visible on categories page",
+                categoriesPage.isValidationErrorVisible());
+    }
+
 }

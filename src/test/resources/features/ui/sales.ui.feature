@@ -1,3 +1,4 @@
+@rajitha
 Feature: Sales Management UI
 
   @UI-SALE-001
@@ -10,6 +11,7 @@ Feature: Sales Management UI
   @UI-SALE-002
   Scenario: Verify pagination functionality on Sales list
     Given user is logged in as "admin"
+    And user ensures there are at least 11 sales records
     When user opens sales page
     And user navigates to the next page
     Then the next set of records should be displayed
@@ -56,6 +58,7 @@ Feature: Sales Management UI
   @UI-SALE-008
   Scenario: Verify pagination for user
     Given user is logged in as "user"
+    And user ensures there are at least 11 sales records
     When user opens sales page
     And user navigates to the next page
     Then the next set of records should be displayed

@@ -1,4 +1,3 @@
-#@UI
 Feature: Authentication UI Tests
 
   @TC_AUTH_01
@@ -33,7 +32,7 @@ Feature: Authentication UI Tests
     Then the validation message "Password is required" is shown under the password field in red
     And the user remains on the login page
 
-    @TC_AUTH_05
+  @TC_AUTH_05
   Scenario: Verify password is required validation when valid admin username is entered
     Given the login page is open
     When the user enters username "admin"
@@ -88,15 +87,14 @@ Feature: Authentication UI Tests
     Then the validation message "Invalid username or password." is shown under the password field in red
     And the user remains on the login page
 
-
   @TC_AUTH_21
-  Scenario: Verify user able to logout
+  Scenario: Verify admin is able to logout successfully
     Given the user is logged in as "admin"
     When the user clicks the logout button
     Then the user is redirected to the login page
 
   @TC_AUTH_22
-  Scenario: Verify user able to logout
+  Scenario: Verify the normal user is able to logout successfully
     Given the user is logged in as "testuser"
     When the user clicks the logout button
     Then the user is redirected to the login page

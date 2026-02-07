@@ -23,7 +23,9 @@ public class SalesPage extends PageObject {
         locators.add(By.xpath("//th[contains(., '" + columnName + "')]"));
         locators.add(By.xpath("//div[@role='columnheader'][contains(., '" + columnName + "')]"));
         locators.add(By.xpath("//th//*[contains(text(), '" + columnName + "')]"));
-        locators.add(By.xpath("//th[contains(translate(., 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), '" + lowerName + "')]"));
+        locators.add(
+                By.xpath("//th[contains(translate(., 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), '"
+                        + lowerName + "')]"));
         locators.add(By.cssSelector("th[data-field*='" + lowerName.replace(" ", "") + "']"));
 
         if (columnName.equalsIgnoreCase("Sold Date")) {
@@ -41,12 +43,14 @@ public class SalesPage extends PageObject {
 
     public boolean isSortedByPrice() {
         List<WebElementFacade> rows = findAll(By.cssSelector("table tbody tr, [role='row']"));
-        if (rows.isEmpty()) return true;
+        if (rows.isEmpty())
+            return true;
 
         List<Double> prices = new ArrayList<>();
         for (WebElementFacade row : rows) {
             List<org.openqa.selenium.WebElement> cells = row.findElements(By.tagName("td"));
-            if (cells.isEmpty()) cells = row.findElements(By.cssSelector("[role='cell']"));
+            if (cells.isEmpty())
+                cells = row.findElements(By.cssSelector("[role='cell']"));
 
             String priceText = "0";
             for (org.openqa.selenium.WebElement cell : cells) {
@@ -58,7 +62,8 @@ public class SalesPage extends PageObject {
             }
             try {
                 prices.add(Double.parseDouble(priceText));
-            } catch (NumberFormatException e) { }
+            } catch (NumberFormatException e) {
+            }
         }
         return isSortedNumeric(prices);
     }
@@ -74,8 +79,8 @@ public class SalesPage extends PageObject {
                 By.cssSelector("li.page-item.active + li a"),
                 By.xpath("//a[contains(text(), 'Next')]"),
                 By.xpath("//button[contains(text(), 'Next')]"),
-                By.cssSelector("[aria-label='Next']")
-        );
+                By.cssSelector("[aria-label='Next']"),
+                By.cssSelector(".pagination .page-link[aria-label='Next']"));
 
         // 1. Scroll into view (aligned to center to avoid header/footer overlap)
         evaluateJavascript("arguments[0].scrollIntoView({behavior: 'smooth', block: 'center'});", nextBtn);
@@ -105,8 +110,7 @@ public class SalesPage extends PageObject {
                 By.xpath("//a[contains(text(), 'Add Sale')]"),
                 By.xpath("//button[contains(text(), 'Add')]"),
                 By.xpath("//button[contains(text(), 'New')]"),
-                By.cssSelector(".btn-primary")
-        );
+                By.cssSelector(".btn-primary"));
         addBtn.click();
         waitABit(1000);
     }
@@ -115,8 +119,7 @@ public class SalesPage extends PageObject {
         WebElementFacade cancelBtn = findFirstPresentWithWait(
                 By.xpath("//button[contains(text(), 'Cancel')]"),
                 By.xpath("//a[contains(text(), 'Cancel')]"),
-                By.cssSelector(".btn-secondary")
-        );
+                By.cssSelector(".btn-secondary"));
         cancelBtn.click();
     }
 
@@ -127,14 +130,14 @@ public class SalesPage extends PageObject {
 
     public void clickDeleteOnFirstSale() {
         waitABit(1000);
-        List<WebElementFacade> deleteButtons = findAll(By.cssSelector("button.btn-danger, .delete-btn, [title='Delete'], .fa-trash, .bi-trash"));
+        List<WebElementFacade> deleteButtons = findAll(
+                By.cssSelector("button.btn-danger, .delete-btn, [title='Delete'], .fa-trash, .bi-trash"));
         if (!deleteButtons.isEmpty()) {
             deleteButtons.get(0).click();
         } else {
             findFirstPresentWithWait(
                     By.xpath("//button[contains(text(), 'Delete')]"),
-                    By.xpath("//*[contains(@class, 'trash')]")
-            ).click();
+                    By.xpath("//*[contains(@class, 'trash')]")).click();
         }
     }
 
@@ -154,22 +157,44 @@ public class SalesPage extends PageObject {
     public void leavePlantEmpty() {
         try {
             WebElementFacade element = findFirstPresentWithWait(
-                    By.name("plant"), By.name("plantId"), By.id("plant"), By.cssSelector("select[name*='plant']")
-            );
+                    By.name("plant"), By.name("plantId"), By.id("plant"), By.cssSelector("select[name*='plant']"));
             if (element.getTagName().equalsIgnoreCase("select")) {
                 element.selectByIndex(0);
             } else {
                 element.clear();
             }
-        } catch (Exception e) {}
+        } catch (Exception e) {
+        }
     }
 
     public void enterQuantity(String qty) {
         WebElementFacade qtyInput = findFirstPresentWithWait(
-                By.name("quantity"), By.name("qty"), By.id("quantity"), By.cssSelector("input[type='number']")
-        );
+                By.name("quantity"), By.name("qty"), By.id("quantity"), By.cssSelector("input[type='number']"));
         qtyInput.clear();
         qtyInput.type(qty);
+    }
+
+    public void selectFirstPlant() {
+        try {
+            WebElementFacade element = findFirstPresentWithWait(
+                    By.name("plant"), By.name("plantId"), By.id("plant"), By.cssSelector("select[name*='plant']"));
+            if (element.getTagName().equalsIgnoreCase("select")) {
+                element.selectByIndex(1);
+            }
+        } catch (Exception e) {
+        }
+    }
+
+    public int getSalesCount() {
+        return findAll(By.cssSelector("table tbody tr, [role='row']")).size();
+    }
+
+    public void createGenericSale() {
+        clickAddSale();
+        selectFirstPlant();
+        enterQuantity("1");
+        saveSale();
+        waitABit(1000);
     }
 
     public void saveSale() {
@@ -179,8 +204,7 @@ public class SalesPage extends PageObject {
                 By.xpath("//button[contains(text(), 'Submit')]"),
                 By.xpath("//button[contains(text(), 'Create')]"),
                 By.xpath("//button[contains(text(), 'Add')]"),
-                By.cssSelector(".btn-primary")
-        ).click();
+                By.cssSelector(".btn-primary")).click();
     }
 
     public boolean isValidationErrorVisible() {
@@ -201,7 +225,8 @@ public class SalesPage extends PageObject {
 
     public boolean isSalesMenuActive() {
         List<WebElementFacade> links = findAll(By.cssSelector("a[href*='/ui/sales']"));
-        if (!links.isEmpty() && links.get(0).isVisible()) return true;
+        if (!links.isEmpty() && links.get(0).isVisible())
+            return true;
         List<WebElementFacade> textLinks = findAll(By.xpath("//a[contains(text(), 'Sales')]"));
         return !textLinks.isEmpty() && textLinks.get(0).isVisible();
     }
@@ -213,21 +238,26 @@ public class SalesPage extends PageObject {
                 if (!elements.isEmpty() && elements.get(0).isVisible()) {
                     return elements.get(0);
                 }
-            } catch (Exception e) { }
+            } catch (Exception e) {
+            }
         }
         for (By by : locators) {
-            if (!findAll(by).isEmpty()) return find(by);
+            if (!findAll(by).isEmpty())
+                return find(by);
         }
         return find(locators[0]);
     }
 
     private <T extends Comparable<T>> boolean isSortedNumeric(List<T> list) {
-        if (list.size() < 2) return true;
+        if (list.size() < 2)
+            return true;
         boolean ascending = true;
         boolean descending = true;
         for (int i = 0; i < list.size() - 1; i++) {
-            if (list.get(i).compareTo(list.get(i + 1)) > 0) ascending = false;
-            if (list.get(i).compareTo(list.get(i + 1)) < 0) descending = false;
+            if (list.get(i).compareTo(list.get(i + 1)) > 0)
+                ascending = false;
+            if (list.get(i).compareTo(list.get(i + 1)) < 0)
+                descending = false;
         }
         return ascending || descending;
     }
