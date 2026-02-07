@@ -1,5 +1,5 @@
 @luxshan
-Feature: API Authentication
+Feature: Authentication API Tes 
 
   @TC_AUTH_11
   Scenario: Verify login with valid credentials for admin
@@ -21,7 +21,7 @@ Feature: API Authentication
     Then the response status code should be 401
     And the response should not contain a valid JWT token
 
-  @TC_AUTH_14
+  @TC_AUTH_15
   Scenario: Verify login with missing username
     When I send a POST request to "/api/auth/login" with username "" and password "somePassword"
     Then the response status code should be 401
