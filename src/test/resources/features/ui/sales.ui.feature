@@ -1,4 +1,4 @@
-@rajitha
+@sales_ui
 Feature: Sales Management UI
 
   @UI-SALE-001

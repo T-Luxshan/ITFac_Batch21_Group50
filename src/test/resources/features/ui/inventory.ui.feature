@@ -1,4 +1,4 @@
-@inventory
+@inventory_ui
 Feature: Inventory Management UI
 
   @TC_INV_001
