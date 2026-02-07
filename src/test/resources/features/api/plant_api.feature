@@ -1,4 +1,4 @@
-@lathisna
+@plants_api
 Feature: Plant API Tests
   Test the CRUD operations of Plant API for Admin and User roles, including unauthorized requests.
 

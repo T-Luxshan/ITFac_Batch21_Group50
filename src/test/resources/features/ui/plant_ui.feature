@@ -1,3 +1,4 @@
+@plants_ui
 Feature: Plant Management UI Tests
 
   @TC_PLANT_ADMIN_UI_001

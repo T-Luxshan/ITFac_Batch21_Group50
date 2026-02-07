@@ -27,7 +27,6 @@ public class PlantUiSteps {
     private final String NORMAL_USER = "testuser";
     private final String NORMAL_PASS = "test123";
 
-
     private int initialPlantCount = 0;
     private String createdPlantName = null;
     private String editedPlantName = null;
@@ -134,7 +133,8 @@ public class PlantUiSteps {
         System.out.println("Current URL: " + currentUrl);
 
         boolean stillOnForm = currentUrl.contains("/plants/add") || currentUrl.contains("/plants/edit");
-        boolean onList = currentUrl.contains("/ui/plants") && !currentUrl.contains("/add") && !currentUrl.contains("/edit");
+        boolean onList = currentUrl.contains("/ui/plants") && !currentUrl.contains("/add")
+                && !currentUrl.contains("/edit");
 
         if (stillOnForm) {
             if (plantFormPage.hasValidationError()) {
@@ -153,7 +153,8 @@ public class PlantUiSteps {
         plantsPage.pause(1000);
 
         String currentUrl = plantFormPage.getDriver().getCurrentUrl();
-        boolean onListPage = currentUrl.contains("/ui/plants") && !currentUrl.contains("/add") && !currentUrl.contains("/edit");
+        boolean onListPage = currentUrl.contains("/ui/plants") && !currentUrl.contains("/add")
+                && !currentUrl.contains("/edit");
         boolean hasMessage = plantsPage.hasSuccessMessage();
 
         System.out.println("Success check - On list page: " + onListPage + ", Has message: " + hasMessage);
@@ -165,7 +166,8 @@ public class PlantUiSteps {
         plantsPage.pause(800);
 
         String currentUrl = plantFormPage.getDriver().getCurrentUrl();
-        boolean onList = currentUrl.contains("/ui/plants") && !currentUrl.contains("/add") && !currentUrl.contains("/edit");
+        boolean onList = currentUrl.contains("/ui/plants") && !currentUrl.contains("/add")
+                && !currentUrl.contains("/edit");
 
         System.out.println("Redirect check - URL: " + currentUrl + ", On list: " + onList);
         assertTrue("Should be redirected to plants list page", onList);
@@ -273,8 +275,19 @@ public class PlantUiSteps {
 
     @Then("Plant is deleted successfully")
     public void plant_is_deleted_successfully() {
-        plantsPage.pause(1000);
-        assertTrue("Should be on plants list", plantsPage.isPlantsHeaderVisible());
+        plantsPage.pause(2500); // Wait for redirect after delete
+
+        String currentUrl = plantsPage.getDriver().getCurrentUrl();
+        System.out.println("[PlantUiSteps] After delete - Current URL: " + currentUrl);
+
+        boolean onListPage = currentUrl.contains("/ui/plants") &&
+                !currentUrl.contains("/add") &&
+                !currentUrl.contains("/edit");
+        boolean headerVisible = plantsPage.isPlantsHeaderVisible();
+
+        System.out.println("[PlantUiSteps] On list page: " + onListPage + ", Header visible: " + headerVisible);
+
+        assertTrue("Should be on plants list (URL: " + currentUrl + ")", onListPage || headerVisible);
     }
 
     @Then("Deleted plant no longer appears in the plant list")

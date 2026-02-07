@@ -8,7 +8,6 @@ import io.cucumber.java.en.Then;
 import io.cucumber.java.en.When;
 import io.restassured.response.Response;
 import net.serenitybdd.rest.SerenityRest;
-import net.thucydides.model.util.EnvironmentVariables;
 
 import java.util.List;
 import java.util.Map;
@@ -27,15 +26,10 @@ import static org.junit.Assert.*;
  */
 public class SalesApiSteps extends BaseApiSteps {
 
-    // Test state
-    private Integer plantId;
-    private Integer plantStock;
-
-    // Fields from second part
-    private static final String BASE = System.getProperty("api.base.url", "http://localhost:8080");
-    private String token;
-    private EnvironmentVariables environmentVariables;
-    private int internalSaleId;
+    // Test state - static to persist across Cucumber step class instances
+    private static Integer plantId;
+    private static Integer plantStock;
+    private static int internalSaleId;
 
     // ==================== Data Setup Steps ====================
 
@@ -56,21 +50,13 @@ public class SalesApiSteps extends BaseApiSteps {
                 }
             }
 
-            // If no plant with stock, use first plant or create one
-            if (plantId == null && !plants.isEmpty()) {
-                Map<String, Object> firstPlant = plants.get(0);
-                plantId = (Integer) firstPlant.get("id");
-                plantStock = firstPlant.get("quantity") != null ? (Integer) firstPlant.get("quantity") : 0;
-                System.out.println("[SalesApiSteps] Using first plant ID: " + plantId + " (stock: " + plantStock + ")");
-            }
-
-            // If still no plant, create one for testing
+            // If no plant with stock > 0 found, create one for testing
             if (plantId == null) {
-                System.out.println("[SalesApiSteps] No plants found, creating one for testing...");
+                System.out.println("[SalesApiSteps] No plants with stock found, creating one for testing...");
                 createTestPlant();
             }
 
-            System.out.println("[SalesApiSteps] Found plant ID: " + plantId + " with stock: " + plantStock);
+            System.out.println("[SalesApiSteps] Found/Created plant ID: " + plantId + " with stock: " + plantStock);
         } else {
             System.out.println("[SalesApiSteps] Failed to get plants: " + response.asString());
             // Try to create a plant anyway
@@ -81,24 +67,33 @@ public class SalesApiSteps extends BaseApiSteps {
     }
 
     private void createTestPlant() {
-        // Get a valid category first
+        // Get a valid sub-category first (plants require sub-categories)
         Response catResponse = sendGet(Constants.UrlPaths.API_CATEGORIES);
 
-        Integer catId = 1;
+        Integer subCatId = 14; // Default fallback from observed data
         if (catResponse.statusCode() == Constants.StatusCodes.OK) {
             try {
-                catId = catResponse.jsonPath().getInt("[0].id");
+                List<Map<String, Object>> categories = catResponse.jsonPath().getList("$");
+                for (Map<String, Object> cat : categories) {
+                    Object parentName = cat.get("parentName");
+                    if (parentName != null && !parentName.toString().equals("-")) {
+                        subCatId = ((Number) cat.get("id")).intValue();
+                        System.out.println(
+                                "[SalesApiSteps] Using sub-category ID: " + subCatId + " (" + cat.get("name") + ")");
+                        break;
+                    }
+                }
             } catch (Exception e) {
-                System.out.println("[SalesApiSteps] Using default category ID: 1");
+                System.out.println("[SalesApiSteps] Error finding sub-category, using fallback: " + subCatId);
             }
         }
 
         String uniqueName = "TestPlant" + System.currentTimeMillis() % 10000;
         String body = String.format(
-                "{\"name\":\"%s\",\"price\":10.00,\"quantity\":100,\"categoryId\":%d}",
-                uniqueName, catId);
+                "{\"name\":\"%s\",\"price\":10,\"quantity\":100}",
+                uniqueName);
 
-        Response createResponse = sendPost(Constants.UrlPaths.API_PLANTS, body);
+        Response createResponse = sendPost(Constants.UrlPaths.API_PLANTS + "/category/" + subCatId, body);
 
         System.out.println("[SalesApiSteps] Create plant response: " + createResponse.statusCode() + " - "
                 + createResponse.asString());
@@ -202,112 +197,86 @@ public class SalesApiSteps extends BaseApiSteps {
 
     @Given("sales api is authenticated as {string}")
     public void salesApiIsAuthenticatedAs(String role) {
-        String username = environmentVariables.getProperty(role + ".username");
-        String password = environmentVariables.getProperty(role + ".password");
-
-        var response = SerenityRest.given()
-                .baseUri(BASE)
-                .contentType("application/json")
-                .body("{\"username\":\"" + username + "\",\"password\":\"" + password + "\"}")
-                .post("/api/auth/login")
-                .then().extract().response();
-
-        token = response.jsonPath().getString("token");
-        if (token == null)
-            token = response.jsonPath().getString("accessToken");
-        if (token == null)
-            token = response.jsonPath().getString("jwt");
-
-        // Sync with base class authToken so authenticatedRequest() works
-        authToken = token;
-        System.out.println("[SalesAuth] Authenticated as " + role + ", token starting with: "
-                + (token != null ? token.substring(0, 10) : "null"));
+        authenticate(role); // The parent's authenticate method sets authToken
+        System.out.println("[SalesAuth] Authenticated as " + role + " using parent helper");
     }
 
     @When("sales api user deletes the created sale")
     public void deleteSale() {
-        SerenityRest.given()
-                .baseUri(BASE)
-                .header("Authorization", "Bearer " + token)
-                .delete("/api/sales/" + internalSaleId);
+        System.out.println("[SalesApi] Attempting to delete sale with ID: " + internalSaleId);
+        lastResponse = authenticatedRequest()
+                .delete(Constants.UrlPaths.API_SALES + "/" + internalSaleId);
+        System.out
+                .println("[SalesApi] Delete response: " + lastResponse.statusCode() + " - " + lastResponse.asString());
     }
 
     @When("sales api user updates the created sale with quantity {int}")
     public void updateSale(int qty) {
-        SerenityRest.given()
-                .baseUri(BASE)
-                .header("Authorization", "Bearer " + token)
-                .contentType("application/json")
+        lastResponse = authenticatedRequest()
                 .body("{\"quantity\":" + qty + "}")
-                .put("/api/sales/" + internalSaleId);
+                .put(Constants.UrlPaths.API_SALES + "/" + internalSaleId);
     }
 
-    // @When("sales api user creates sale for plant id {int} with quantity {int}")
-    // public void createSale(int plantId, int qty) {
-    // SerenityRest.given()
-    // .baseUri(BASE)
-    // .header("Authorization", "Bearer " + token)
-    // .queryParam("quantity", qty)
-    // .post("/api/sales/plant/" + plantId);
-    // }
     @When("sales api user creates sale for plant id {int} with quantity {int}")
-    public void createSale(int plantId, int qty) {
-        var response = SerenityRest.given()
-                .baseUri(BASE)
-                .header("Authorization", "Bearer " + token)
-                .queryParam("quantity", qty)
-                .post("/api/sales/plant/" + plantId)
-                .then().extract().response();
+    public void createSale(int targetPlantId, int qty) {
+        // If the scenario uses 1 (common default), use our dynamically found plant with
+        // stock
+        if (targetPlantId == 1 && this.plantId != null) {
+            targetPlantId = this.plantId;
+            System.out.println("[SalesApi] Using dynamic plant ID " + targetPlantId + " instead of 1");
+        }
 
-        if (response.statusCode() == 200 || response.statusCode() == 201) {
-            internalSaleId = response.jsonPath().getInt("id");
+        lastResponse = authenticatedRequest()
+                .queryParam("quantity", qty)
+                .post(Constants.UrlPaths.API_SALES + "/plant/" + targetPlantId);
+
+        System.out.println(
+                "[SalesApi] Create sale response: " + lastResponse.statusCode() + " - " + lastResponse.asString());
+
+        if (lastResponse.statusCode() == 200 || lastResponse.statusCode() == 201) {
+            internalSaleId = lastResponse.jsonPath().getInt("id");
+            System.out.println("[SalesApi] Created sale with ID: " + internalSaleId);
+        } else {
+            System.out.println("[SalesApi] Failed to create sale. Status: " + lastResponse.statusCode());
+            internalSaleId = 0; // Reset to 0 to indicate no sale was created
         }
     }
 
     @When("sales api user requests sales with sort {string}")
     public void getSalesSorted(String sort) {
-        SerenityRest.given()
-                .baseUri(BASE)
-                .header("Authorization", "Bearer " + token)
+        lastResponse = authenticatedRequest()
                 .queryParam("sort", sort)
-                .get("/api/sales");
+                .get(Constants.UrlPaths.API_SALES);
     }
 
     @When("sales api user requests sales page {int} size {int}")
     public void getSalesPaginated(int page, int size) {
-        SerenityRest.given()
-                .baseUri(BASE)
-                .header("Authorization", "Bearer " + token)
+        lastResponse = authenticatedRequest()
                 .queryParam("page", page)
                 .queryParam("size", size)
-                .get("/api/sales/page");
+                .get(Constants.UrlPaths.API_SALES + "/page");
     }
 
     @Given("sales api is not authenticated")
     public void salesApiIsNotAuthenticated() {
+        authToken = "";
         SerenityRest.reset();
     }
 
     @When("sales api user sends GET {string}")
     public void salesApiUserSendsGet(String endpoint) {
-        SerenityRest.given()
-                .baseUri(BASE)
-                .get(endpoint);
+        lastResponse = authenticatedRequest().get(endpoint);
     }
 
     @When("sales api user sends GET {string} without token")
     public void sendGetNoToken(String endpoint) {
-        SerenityRest.given()
-                .baseUri(BASE)
-                .get(endpoint);
+        lastResponse = unauthenticatedRequest().get(endpoint);
     }
 
     @When("sales api user sends GET for the deleted sale")
     public void getDeletedSale() {
-        SerenityRest.given()
-                .baseUri(BASE)
-                .header("Authorization", "Bearer " + token)
-                .get("/api/sales/" + internalSaleId);
+        lastResponse = authenticatedRequest()
+                .get(Constants.UrlPaths.API_SALES + "/" + internalSaleId);
     }
 
     @Then("sales api response status should be {int}")

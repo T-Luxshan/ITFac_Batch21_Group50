@@ -145,12 +145,22 @@ public class SalesPage extends PageObject {
 
     public void clickAddSale() {
         WebElementFacade addBtn = findFirstPresentWithWait(
+                By.cssSelector("a[href='/ui/sales/new'].btn.btn-primary"), // Most specific and likely correct
+                By.xpath("//a[contains(@href, '/sales/new')]"),
                 By.xpath("//button[contains(text(), 'Add Sale')]"),
                 By.xpath("//a[contains(text(), 'Add Sale')]"),
                 By.xpath("//button[contains(text(), 'Add')]"),
                 By.xpath("//button[contains(text(), 'New')]"),
                 By.cssSelector(".btn-primary"));
-        addBtn.click();
+
+        // Ensure element is clickable
+        addBtn.waitUntilClickable();
+
+        try {
+            addBtn.click();
+        } catch (Exception e) {
+            evaluateJavascript("arguments[0].click();", addBtn);
+        }
         waitABit(1000);
     }
 

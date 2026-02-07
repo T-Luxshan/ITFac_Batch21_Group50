@@ -1,3 +1,4 @@
+@sales_api
 Feature: Sales Management API (Group50)
 
   @API-SALE-001
@@ -12,7 +13,7 @@ Feature: Sales Management API (Group50)
   @API-SALE-002
   Scenario: API-SALE-002 Verify Validation for Negative Quantity
     Given sales api is authenticated as "admin"
-  When sales api user creates sale for plant id 1 with quantity -5
+    When sales api user creates sale for plant id 1 with quantity -5
     Then sales api response status should be 400
 
   @API-SALE-003

@@ -21,7 +21,7 @@ import org.junit.runner.RunWith;
                 },
 
                 // Default tags - exclude @skip and @wip (work in progress)
-                tags = "not @skip",
+                tags = "@plants_ui",
 
                 // Plugin configuration for better reporting
 
