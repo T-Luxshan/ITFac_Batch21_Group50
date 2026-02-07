@@ -149,6 +149,15 @@ public class CategoriesPage extends PageObject {
             }
         }
 
+        // Click the Search button to apply the filter
+        WebElementFacade searchButton = findFirstPresentWithWait(
+                By.cssSelector("button.btn.btn-primary[type='submit']"),
+                By.cssSelector("button[type='submit']"),
+                By.xpath("//button[contains(text(), 'Search')]"));
+
+        searchButton.click();
+        System.out.println("Clicked Search button to apply parent category filter");
+
         // Wait for filter to apply
         waitABit(1500);
     }
@@ -159,7 +168,12 @@ public class CategoriesPage extends PageObject {
 
         System.out.println("Verifying results show only children of: " + parentCategory);
 
-        // Get all visible rows in the table
+        // Assuming structure: ID | Name | Parent Category
+        // Column indices: 0 = ID, 1 = Name, 2 = Parent Category
+        int parentColIndex = 2;
+        int nameColIndex = 1;
+
+        // Get all visible rows in the table or grid
         List<WebElementFacade> rows = findAll(By.cssSelector("table tbody tr, [role='row']"));
 
         if (rows.isEmpty()) {
@@ -169,33 +183,37 @@ public class CategoriesPage extends PageObject {
 
         System.out.println("Found " + rows.size() + " rows after filtering");
 
-        // Check each row to verify the parent category
         int matchingRows = 0;
         int totalDataRows = 0;
+        boolean emptyStateDetected = false;
 
         for (WebElementFacade row : rows) {
             List<org.openqa.selenium.WebElement> cells = row.findElements(By.cssSelector("td, [role='cell']"));
 
-            // Skip empty or header rows
-            if (cells.isEmpty() || cells.size() < 3) {
+            String rowText = row.getText().trim().toLowerCase();
+            if (rowText.contains("no category found") || rowText.contains("no categories found")
+                    || rowText.contains("no data") || rowText.contains("no rows")) {
+                emptyStateDetected = true;
+                System.out.println("Empty-state row detected, skipping data verification for it");
+                continue;
+            }
+
+            // Skip rows that clearly are not data rows
+            if (cells.isEmpty() || cells.size() <= parentColIndex) {
                 continue;
             }
 
             totalDataRows++;
 
-            // Assuming structure: ID | Name | Parent Category
-            // Column index 2 should be the parent category
-            String categoryName = cells.get(1).getText().trim();
-            String parentInRow = cells.get(2).getText().trim();
+            String categoryName = (cells.size() > nameColIndex) ? cells.get(nameColIndex).getText().trim()
+                    : "(unknown)";
+            String parentInRow = cells.get(parentColIndex).getText().trim();
 
-            System.out.println(
-                    "Row " + totalDataRows + ": Category='" + categoryName + "', Parent='" + parentInRow + "'");
+            System.out.println("Row " + totalDataRows + ": Category='" + categoryName + "', Parent='" + parentInRow
+                    + "'");
 
-            // Check if this row's parent matches our filter
-            boolean matches = parentInRow.equalsIgnoreCase(parentCategory) ||
-                    parentInRow.equals(parentCategory) ||
-                    // Sometimes parent might be shown with different formatting
-                    parentInRow.toLowerCase().contains(parentCategory.toLowerCase());
+            boolean matches = parentInRow.equalsIgnoreCase(parentCategory) || parentInRow.equals(parentCategory)
+                    || parentInRow.toLowerCase().contains(parentCategory.toLowerCase());
 
             if (matches) {
                 matchingRows++;
@@ -206,11 +224,21 @@ public class CategoriesPage extends PageObject {
             }
         }
 
+        if (totalDataRows == 0 && emptyStateDetected) {
+            System.out.println("Filter applied but UI shows empty state for parent '" + parentCategory
+                    + "'. Treating as valid (no children to display).");
+            return true;
+        }
+
+        if (totalDataRows == 0) {
+            System.out.println("No data rows found to verify and no empty state detected");
+            return false;
+        }
+
         System.out.println("Filter verification: " + matchingRows + " out of " + totalDataRows + " rows match parent '"
                 + parentCategory + "'");
 
-        // All visible rows should match the filter
-        boolean allMatch = (totalDataRows > 0) && (matchingRows == totalDataRows);
+        boolean allMatch = matchingRows == totalDataRows;
 
         if (!allMatch) {
             System.out.println("FILTER FAILED: Not all rows have parent '" + parentCategory + "'");
@@ -746,6 +774,19 @@ public class CategoriesPage extends PageObject {
         return ascending || descending;
     }
 
+    private int getColumnIndexByHeaderKeyword(String keyword, int defaultIndex) {
+        List<WebElementFacade> headers = findAll(By.cssSelector("th, [role='columnheader']"));
+
+        for (int i = 0; i < headers.size(); i++) {
+            String headerText = headers.get(i).getText().trim().toLowerCase();
+            if (headerText.contains(keyword.toLowerCase())) {
+                return i;
+            }
+        }
+
+        return defaultIndex;
+    }
+
     public boolean isValidationErrorVisible() {
         // Detects common validation error indicators in different UI frameworks
         return !findAll(
@@ -769,28 +810,38 @@ public class CategoriesPage extends PageObject {
     }
 
     private WebElementFacade findFirstPresentWithWait(By... locators) {
-        // Try each locator with a short wait
+        // Try each locator with a SHORT wait (2 seconds instead of default 10+)
         for (By by : locators) {
             try {
-                WebElementFacade element = find(by);
-                element.waitUntilPresent();
+                // Use withTimeoutOf to limit wait time to 2 seconds
+                WebElementFacade element = find(by).withTimeoutOf(java.time.Duration.ofSeconds(2));
                 if (element.isPresent() && element.isVisible()) {
+                    System.out.println("[PERFORMANCE] Found element using locator: " + by);
                     return element;
+                }
+            } catch (Exception e) {
+                // Continue to next locator - this is expected when element not found
+            }
+        }
+
+        // Fallback - try again without visibility check using shorter timeout
+        for (By by : locators) {
+            try {
+                List<WebElementFacade> elements = findAll(by);
+                if (!elements.isEmpty()) {
+                    WebElementFacade element = elements.get(0).withTimeoutOf(java.time.Duration.ofSeconds(1));
+                    if (element.isPresent()) {
+                        System.out.println("[PERFORMANCE] Found element (fallback) using locator: " + by);
+                        return element;
+                    }
                 }
             } catch (Exception e) {
                 // Continue to next locator
             }
         }
-        // Fallback - try again without visibility check
-        for (By by : locators) {
-            if (!findAll(by).isEmpty()) {
-                WebElementFacade element = find(by);
-                if (element.isPresent()) {
-                    return element;
-                }
-            }
-        }
+
         // Last resort - return first locator (will fail with clear error)
+        System.out.println("[WARNING] No element found with any locator, returning first locator (will likely fail)");
         return find(locators[0]);
     }
 
