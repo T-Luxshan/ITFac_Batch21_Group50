@@ -292,22 +292,24 @@ public class CategoriesPage extends PageObject {
 
         System.out.println("Attempting to click Add Category button");
 
-        // Find Add/Create button - prioritize the exact text "Add A Category"
+        // Find Add/Create button - OPTIMIZED based on actual HTML structure
+        // The actual element is: <a href="/ui/categories/add" class="btn
+        // btn-primary">Add A Category</a>
         WebElementFacade addButton = findFirstPresentWithWait(
+                // Prioritize the actual structure first (fastest)
+                By.cssSelector("a.btn.btn-primary[href*='/categories/add']"),
+                By.xpath("//a[contains(@href, '/categories/add') and contains(text(), 'Add A Category')]"),
+                By.xpath("//a[contains(text(), 'Add A Category')]"),
+                By.cssSelector("a[href*='/categories/add']"),
+                // Fallback to button selectors (in case UI changes)
                 By.xpath("//button[contains(text(), 'Add A Category')]"),
                 By.xpath("//button[contains(text(), 'Add a Category')]"),
                 By.xpath("//button[text()='Add A Category']"),
-                By.xpath("//a[contains(text(), 'Add A Category')]"),
                 By.xpath("//button[contains(., 'Add A Category')]"),
-                By.cssSelector("button[id*='add']"),
-                By.cssSelector("button[id*='Add']"),
-                By.cssSelector("button[id*='create']"),
-                By.cssSelector("button[id*='Create']"),
-                By.cssSelector("button[class*='add']"),
-                By.cssSelector("button[class*='Add']"),
-                By.xpath("//button[contains(text(), 'Add')]"),
-                By.xpath("//button[contains(text(), 'Create')]"),
-                By.xpath("//button[contains(text(), 'New')]"));
+                // Generic fallbacks (last resort)
+                By.cssSelector("button[id*='add'], a[id*='add']"),
+                By.cssSelector("button[class*='add'], a[class*='add']"),
+                By.xpath("//button[contains(text(), 'Add')] | //a[contains(text(), 'Add')]"));
 
         System.out.println("Found button with text: " + addButton.getText());
         addButton.click();
