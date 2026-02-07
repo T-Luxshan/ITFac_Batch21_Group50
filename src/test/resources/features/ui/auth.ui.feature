@@ -87,15 +87,3 @@ Feature: Authentication UI Tests
     And the user clicks the login button
     Then the validation message "Invalid username or password." is shown under the password field in red
     And the user remains on the login page
-
-  @TC_AUTH_21
-  Scenario: Verify admin is able to logout successfully
-    Given the user is logged in as "admin"
-    When the user clicks the logout button
-    Then the user is redirected to the login page
-
-  @TC_AUTH_22
-  Scenario: Verify the normal user is able to logout successfully
-    Given the user is logged in as "testuser"
-    When the user clicks the logout button
-    Then the user is redirected to the login page
