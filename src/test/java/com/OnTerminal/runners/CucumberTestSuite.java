@@ -6,6 +6,6 @@ import org.junit.runner.RunWith;
 
 @RunWith(CucumberWithSerenity.class)
 @CucumberOptions(features = "src/test/resources/features", glue = { "com.OnTerminal.steps.ui",
-        "com.OnTerminal.steps.api" }, tags = "not @skip")
+                "com.OnTerminal.steps.api" }, tags = "@luxshan")
 public class CucumberTestSuite {
 }

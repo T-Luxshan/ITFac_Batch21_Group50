@@ -9,12 +9,26 @@ import org.junit.Assert;
 
 public class SalesUiSteps {
 
-    // --- FIX: Removed @Steps annotation here. Serenity auto-injects PageObjects. ---
+    // --- FIX: Removed @Steps annotation here. Serenity auto-injects PageObjects.
+    // ---
     SalesPage salesPage;
 
     @When("user opens sales page")
     public void openSalesPage() {
         salesPage.openSales();
+    }
+
+    @Given("user ensures there are at least {int} sales records")
+    public void ensureSalesData(int count) {
+        salesPage.openSales();
+        int currentCount = salesPage.getSalesCount();
+        if (currentCount < count) {
+            System.out.println(
+                    "Data volume too low for pagination test. Creating " + (count - currentCount) + " records...");
+            for (int i = 0; i < (count - currentCount); i++) {
+                salesPage.createGenericSale();
+            }
+        }
     }
 
     @When("user sorts sales by {string}")
@@ -59,7 +73,7 @@ public class SalesUiSteps {
 
     @Then("no new sale should be created")
     public void verifyNoSaleCreated() {
-        // Logical verification is covered by being back on the list page 
+        // Logical verification is covered by being back on the list page
     }
 
     @When("user clicks Delete on a sale")
