@@ -90,7 +90,7 @@ Feature: Category Management UI (Group50)
 
 
   @TC_CAT_011
-  Scenario: Detect Duplicate Category Name Bug
+  Scenario: TC_CAT_011 Detect Duplicate Category Name Bug
     Given user is logged in as "admin"
     When user opens categories page
     And user clicks Add Category
@@ -100,3 +100,22 @@ Feature: Category Management UI (Group50)
     And user enters category name "DupTest"
     And user saves category
     Then validation error should be shown on categories page
+
+  @TC_CAT_SEC_001 @security @bug
+  Scenario: TC_CAT_SEC_001 - Regular user should not see Edit buttons
+    Given user is logged in as "user"
+    When user opens categories page
+    Then Edit buttons should not be visible
+
+  @TC_CAT_SEC_002 @security @bug
+  Scenario: TC_CAT_SEC_002 - Regular user should not see Delete buttons
+    Given user is logged in as "user"
+    When user opens categories page
+    Then Delete buttons should not be visible
+
+  @TC_CAT_SEC_003 @security @bug
+  Scenario: TC_CAT_SEC_003 - Regular user should not be able to edit category directly
+    Given user is logged in as "user"
+    When user opens categories page
+    And user tries to access edit page for first category
+    Then user should see access denied page

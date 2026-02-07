@@ -10,40 +10,40 @@ import org.junit.runner.RunWith;
  */
 @RunWith(CucumberWithSerenity.class)
 @CucumberOptions(
-        // Feature file location
-        features = "src/test/resources/features",
+                // Feature file location
+                features = "src/test/resources/features",
 
-        // Step definition packages
-        glue = {
-                "com.OnTerminal.steps",
-                "com.OnTerminal.steps.ui",
-                "com.OnTerminal.steps.api"
-        },
+                // Step definition packages
+                glue = {
+                                "com.OnTerminal.steps",
+                                "com.OnTerminal.steps.ui",
+                                "com.OnTerminal.steps.api"
+                },
 
-        // Default tags - exclude @skip and @wip (work in progress)
-        tags = "@sales_ui",
+                // Default tags - exclude @skip and @wip (work in progress)
+                tags = "@security",
 
-        // Plugin configuration for better reporting
-        plugin = {
-                "pretty",
-                "html:target/cucumber-reports/cucumber.html",
-                "json:target/cucumber-reports/cucumber.json",
-                "junit:target/cucumber-reports/cucumber.xml"
-        },
+                // Plugin configuration for better reporting
 
-        // Fail if step definitions are not found
-        snippets = CucumberOptions.SnippetType.CAMELCASE,
+                plugin = {
+                                "pretty",
+                                "html:target/cucumber-reports/cucumber.html",
+                                "json:target/cucumber-reports/cucumber.json",
+                                "junit:target/cucumber-reports/cucumber.xml"
+                },
 
-        // Rerun failed scenarios
-        monochrome = true,
+                // Fail if step definitions are not found
+                snippets = CucumberOptions.SnippetType.CAMELCASE,
 
-        // Show summary at the end
-        dryRun = false
-)
+                // Rerun failed scenarios
+                monochrome = true,
+
+                // Show summary at the end
+                dryRun = false)
 public class CucumberTestSuite {
-    /*
-     * This class is intentionally empty.
-     * It serves as an entry point for JUnit to discover and run Cucumber tests.
-     *
-     */
+        /*
+         * This class is intentionally empty.
+         * It serves as an entry point for JUnit to discover and run Cucumber tests.
+         *
+         */
 }

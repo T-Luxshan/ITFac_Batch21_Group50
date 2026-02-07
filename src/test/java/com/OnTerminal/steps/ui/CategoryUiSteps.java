@@ -159,4 +159,28 @@ public class CategoryUiSteps {
                 categoriesPage.isMessageDisplayed(expectedMessage));
     }
 
+    // ==================== Security Test Steps ====================
+
+    @Then("Edit buttons should not be visible")
+    public void edit_buttons_should_not_be_visible() {
+        assertTrue("Edit buttons should NOT be visible for regular user",
+                categoriesPage.areEditButtonsNotVisible());
+    }
+
+    @Then("Delete buttons should not be visible")
+    public void delete_buttons_should_not_be_visible() {
+        assertTrue("Delete buttons should NOT be visible for regular user",
+                categoriesPage.areDeleteButtonsNotVisible());
+    }
+
+    @When("user tries to access edit page for first category")
+    public void user_tries_to_access_edit_page_for_first_category() {
+        String categoryId = categoriesPage.getFirstCategoryId();
+        if (categoryId != null) {
+            categoriesPage.openEditCategoryPage(categoryId);
+        } else {
+            System.out.println("Warning: No category found to test edit access");
+        }
+    }
+
 }

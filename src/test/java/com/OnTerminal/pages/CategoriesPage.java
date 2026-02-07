@@ -820,4 +820,125 @@ public class CategoriesPage extends PageObject {
         return messageFound;
     }
 
+    // ==================== Security Verification Methods ====================
+
+    /**
+     * Verifies that Edit buttons are NOT visible for regular users
+     * This is a SECURITY check - regular users should not have edit access
+     */
+    public boolean areEditButtonsNotVisible() {
+        waitABit(2000);
+        System.out.println("[SECURITY CHECK] Verifying Edit buttons are NOT visible to regular user");
+
+        // 1. Check for standard Edit text buttons/links
+        List<WebElementFacade> editButtons = findAll(By.xpath(
+                "//button[contains(translate(text(), 'EDIT', 'edit'), 'edit')] | " +
+                        "//a[contains(translate(text(), 'EDIT', 'edit'), 'edit')] | " +
+                        "//*[contains(@class, 'edit')] | " +
+                        "//*[contains(@id, 'edit')] | " +
+                        "//*[contains(@title, 'Edit')] | " +
+                        "//*[contains(@aria-label, 'Edit')]"));
+
+        // 2. Check all buttons/links in the table for icons that look like Edit
+        // (pencil, etc.)
+        List<WebElementFacade> tableIcons = findAll(By.cssSelector("table i, .table i, table svg, .table svg"));
+        for (WebElementFacade icon : tableIcons) {
+            String html = icon.getAttribute("outerHTML").toLowerCase();
+            if (html.contains("edit") || html.contains("pencil") || html.contains("fa-edit")
+                    || html.contains("fa-pencil") || html.contains("write")) {
+                editButtons.add(icon);
+            }
+        }
+
+        // 3. Broad search for ANY button/link in the data rows (usually users shouldn't
+        // see any)
+        List<WebElementFacade> dataRowActions = findAll(By.cssSelector("table tbody tr button, table tbody tr a"));
+        for (WebElementFacade action : dataRowActions) {
+            String text = action.getText().toLowerCase();
+            if (text.contains("edit")) {
+                editButtons.add(action);
+            }
+        }
+
+        if (editButtons.isEmpty()) {
+            System.out.println("[PASS] No Edit buttons/indicators found in the DOM.");
+            return true;
+        }
+
+        int visibleCount = 0;
+        for (WebElementFacade btn : editButtons) {
+            if (btn.isCurrentlyVisible()) {
+                visibleCount++;
+                String desc = btn.getText().isEmpty() ? btn.getAttribute("outerHTML") : btn.getText();
+                System.out.println("[FAIL] SECURITY BUG: Possible Edit button IS visible - " + desc);
+            }
+        }
+
+        if (visibleCount > 0) {
+            System.out.println("[FAIL] Found " + visibleCount + " visible Edit-related elements - SECURITY BUG!");
+            return false;
+        }
+
+        System.out.println("[PASS] Edit-related elements are either missing or hidden - correct");
+        return true;
+    }
+
+    /**
+     * Verifies that Delete buttons are NOT visible for regular users
+     * This is a SECURITY check - regular users should not have delete access
+     */
+    public boolean areDeleteButtonsNotVisible() {
+        waitABit(2000);
+        System.out.println("[SECURITY CHECK] Verifying Delete buttons are NOT visible to regular user");
+
+        // 1. Check for standard Delete text buttons/links
+        List<WebElementFacade> deleteButtons = new java.util.ArrayList<>(findAll(By.xpath(
+                "//button[contains(translate(text(), 'DELETE', 'delete'), 'delete')] | " +
+                        "//a[contains(translate(text(), 'DELETE', 'delete'), 'delete')] | " +
+                        "//*[contains(@class, 'delete')] | " +
+                        "//*[contains(@class, 'remove')] | " +
+                        "//*[contains(@class, 'trash')] | " +
+                        "//*[contains(@id, 'delete')] | " +
+                        "//*[contains(@title, 'Delete')] | " +
+                        "//*[contains(@aria-label, 'Delete')]")));
+
+        // 2. Check all icons in the table for trash cans, etc.
+        List<WebElementFacade> tableIcons = findAll(By.cssSelector("table i, .table i, table svg, .table svg"));
+        for (WebElementFacade icon : tableIcons) {
+            String html = icon.getAttribute("outerHTML").toLowerCase();
+            if (html.contains("delete") || html.contains("trash") || html.contains("remove")
+                    || html.contains("fa-trash") || html.contains("fa-remove")) {
+                deleteButtons.add(icon);
+            }
+        }
+
+        // 3. Check for buttons with 'danger' or 'red' classes in the table which are
+        // often delete buttons
+        List<WebElementFacade> dangerButtons = findAll(
+                By.cssSelector("table .btn-danger, table .text-danger, table [class*='danger']"));
+        deleteButtons.addAll(dangerButtons);
+
+        if (deleteButtons.isEmpty()) {
+            System.out.println("[PASS] No Delete buttons/indicators found in the DOM.");
+            return true;
+        }
+
+        int visibleCount = 0;
+        for (WebElementFacade btn : deleteButtons) {
+            if (btn.isCurrentlyVisible()) {
+                visibleCount++;
+                String desc = btn.getText().isEmpty() ? "Element with icon/class" : btn.getText();
+                System.out.println("[FAIL] SECURITY BUG: Possible Delete button IS visible - " + desc);
+            }
+        }
+
+        if (visibleCount > 0) {
+            System.out.println("[FAIL] Found " + visibleCount + " visible Delete-related elements - SECURITY BUG!");
+            return false;
+        }
+
+        System.out.println("[PASS] Delete-related elements are either missing or hidden - correct");
+        return true;
+    }
+
 }
