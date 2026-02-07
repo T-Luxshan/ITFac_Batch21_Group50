@@ -74,3 +74,15 @@ Feature: Category Management UI (Group50)
     When user opens add category page
     And user clicks Cancel
     Then user should be on categories list page
+
+  @TC_CAT_011
+  Scenario: Detect Duplicate Category Name Bug
+    Given user is logged in as "admin"
+    When user opens categories page
+    And user clicks Add Category
+    And user enters category name "DupTest"
+    And user saves category
+    And user clicks Add Category
+    And user enters category name "DupTest"
+    And user saves category
+    Then validation error should be shown on categories page
