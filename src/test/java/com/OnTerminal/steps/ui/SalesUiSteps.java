@@ -1,6 +1,8 @@
 package com.OnTerminal.steps.ui;
 
+import com.OnTerminal.pages.PlantsPage;
 import com.OnTerminal.pages.SalesPage;
+import io.cucumber.java.en.And;
 import io.cucumber.java.en.Given;
 import io.cucumber.java.en.Then;
 import io.cucumber.java.en.When;
@@ -15,6 +17,10 @@ public class SalesUiSteps {
 
     // Serenity auto-injects PageObjects
     SalesPage salesPage;
+    PlantsPage plantsPage;
+
+    // Test state to share between steps
+    private String notedPlantName;
 
     // ==================== Navigation Steps ====================
 
@@ -36,6 +42,19 @@ public class SalesUiSteps {
                 salesPage.createGenericSale();
             }
         }
+    }
+
+    @And("user notes the stock quantity of first available plant")
+    public void noteFirstPlantStock() {
+        plantsPage.recordStockOfFirstPlant();
+        notedPlantName = plantsPage.getFirstPlantName();
+        System.out.println("[SalesUiSteps] Noted plant: " + notedPlantName);
+    }
+
+    @And("user finds a plant with low stock")
+    public void findLowStock() {
+        notedPlantName = plantsPage.findLowStockPlant();
+        System.out.println("[SalesUiSteps] Found low stock plant: " + notedPlantName);
     }
 
     // ==================== Sorting Steps ====================
@@ -84,6 +103,27 @@ public class SalesUiSteps {
         salesPage.enterQuantity(qty);
     }
 
+    @And("user enters quantity greater than available stock")
+    public void enterGreaterQuantity() {
+        int stock = plantsPage.getRecordedStock(notedPlantName);
+        salesPage.enterQuantity(String.valueOf(stock + 1));
+    }
+
+    @And("user selects the noted plant from dropdown")
+    public void selectNotedPlant() {
+        salesPage.selectPlantByName(notedPlantName);
+    }
+
+    @And("user selects the low stock plant from dropdown")
+    public void selectLowStockPlant() {
+        salesPage.selectPlantByName(notedPlantName);
+    }
+
+    @And("user clicks sell button")
+    public void clickSell() {
+        salesPage.clickSellButton();
+    }
+
     @When("user saves sale")
     public void saveSale() {
         salesPage.saveSale();
@@ -101,14 +141,47 @@ public class SalesUiSteps {
         assertTrue("Validation error should be visible", salesPage.isValidationErrorVisible());
     }
 
+    @Then("error message should be displayed on the same page")
+    public void verifyErrorMessage() {
+        assertTrue("Error message should be displayed on the page",
+                salesPage.isErrorMessageDisplayed() || salesPage.isValidationErrorVisible());
+    }
+
     @Then("user should be on sales list page")
     public void verifySalesList() {
         assertTrue("User should be on sales list page", salesPage.isAtSalesList());
     }
 
+    @Then("user should be redirected to sales list page")
+    public void verifyRedirectToSalesList() {
+        assertTrue("User should be redirected to sales list page", salesPage.isOnSalesListPage());
+    }
+
+    @And("the stock quantity should be reduced by {int}")
+    public void verifyStockReduced(int reduction) {
+        int recordedStock = plantsPage.getRecordedStock(notedPlantName);
+        int currentStock = plantsPage.getCurrentStock(notedPlantName);
+        System.out.println("[SalesUiSteps] Verifying stock reduction for " + notedPlantName +
+                ": Recorded=" + recordedStock + ", Current=" + currentStock);
+        assertEquals("Stock not reduced correctly for " + notedPlantName,
+                recordedStock - reduction, currentStock);
+    }
+
     @Then("no new sale should be created")
     public void verifyNoSaleCreated() {
         // Logical verification is covered by being back on the list page
+    }
+
+    @Then("dropdown should display available plants")
+    public void verifyDropdown() {
+        assertTrue("Dropdown should be visible", salesPage.isDropdownVisible());
+        assertFalse("Dropdown should not be empty", salesPage.getDropdownOptions().isEmpty());
+    }
+
+    @And("plants should be selectable")
+    public void verifySelectable() {
+        // Dropdown interaction implicitly verifies selectability
+        salesPage.selectFirstPlant();
     }
 
     // ==================== Delete Steps ====================
@@ -139,7 +212,7 @@ public class SalesUiSteps {
         }
     }
 
-    // ==================== Menu Navigation Steps ====================
+    // ==================== Menu Verification Steps ====================
 
     @Then("Sales menu should be visible and active")
     public void verifySalesMenu() {
