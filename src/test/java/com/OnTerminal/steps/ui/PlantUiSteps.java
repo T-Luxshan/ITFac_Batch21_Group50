@@ -4,12 +4,12 @@ import com.OnTerminal.pages.LoginPage;
 import com.OnTerminal.pages.PlantFormPage;
 import com.OnTerminal.pages.PlantsPage;
 import io.cucumber.java.en.Given;
-import io.cucumber.java.en.When;
 import io.cucumber.java.en.Then;
+import io.cucumber.java.en.When;
 import net.serenitybdd.annotations.Steps;
 
-import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 public class PlantUiSteps {
 
