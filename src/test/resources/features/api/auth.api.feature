@@ -1,4 +1,4 @@
-#@API
+@luxshan
 Feature: API Authentication
 
   @TC_AUTH_11
