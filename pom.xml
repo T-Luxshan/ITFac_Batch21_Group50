@@ -10,8 +10,8 @@
     <properties>
         <!-- Using the Serenity-recommended approach: set the version once and reuse it -->
         <serenity.version>5.0.2</serenity.version>
-        <maven.compiler.source>21</maven.compiler.source>
-        <maven.compiler.target>21</maven.compiler.target>
+        <maven.compiler.source>17</maven.compiler.source>
+        <maven.compiler.target>17</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
         <!-- Cucumber version recommended in Serenity docs for this Serenity line -->

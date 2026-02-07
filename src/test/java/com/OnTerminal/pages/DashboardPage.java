@@ -30,6 +30,25 @@ public class DashboardPage extends PageObject {
         }
     }
 
+    public void clickInventory() {
+        WebElementFacade inventoryBtn = findFirstPresent(
+                By.xpath("//a[contains(., 'Inventory')]"),
+                By.xpath("//span[contains(text(), 'Inventory')]"),
+                By.cssSelector("a[href*='inventory']"),
+                By.cssSelector(".nav-link[href='/inventory']"),
+                By.id("inventory-menu"));
+
+        inventoryBtn.waitUntilEnabled().click();
+        waitABit(1000);
+    }
+
+    public boolean isInventoryPageDisplayed() {
+        return getDriver().getCurrentUrl().contains("/inventory") ||
+                getDriver().getCurrentUrl().contains("/Inventory") ||
+                containsText("Inventory List") ||
+                containsText("Stock Management");
+    }
+
     private WebElementFacade findFirstPresent(By... locators) {
         for (By by : locators) {
             WebElementFacade el = find(by);
