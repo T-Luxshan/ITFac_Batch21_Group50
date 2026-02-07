@@ -2,7 +2,9 @@ package com.OnTerminal.pages;
 
 import net.serenitybdd.core.pages.PageObject;
 import net.serenitybdd.core.pages.WebElementFacade;
+import com.OnTerminal.utils.SoftAssertionCollector;
 import org.openqa.selenium.By;
+import org.openqa.selenium.WebElement;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -60,27 +62,25 @@ public class CategoriesPage extends PageObject {
         // Wait for page to be fully loaded
         waitABit(2000);
 
+        // Print debugging information
+        System.out.println("Current URL: " + getDriver().getCurrentUrl());
+        System.out.println("Page title: " + getDriver().getTitle());
+
         // Find search input using multiple possible selectors with wait
-        WebElementFacade searchInput = findFirstPresentWithWait(
-                By.cssSelector("input[type='search']"),
-                By.cssSelector("input[placeholder*='Search']"),
-                By.cssSelector("input[placeholder*='search']"),
-                By.cssSelector("input[name='search']"),
-                By.cssSelector("input[id*='search']"),
-                By.cssSelector("input[class*='search']"),
-                By.cssSelector("input[class*='Search']"),
-                By.cssSelector("[role='searchbox']"),
-                By.cssSelector("input[type='text']"),
-                By.cssSelector("input"));
+        WebElementFacade searchInput = find(By.name("name"));
 
         searchInput.clear();
         searchInput.type(keyword);
         searchInput.sendKeys(org.openqa.selenium.Keys.ENTER);
 
-        // Wait a bit longer for search to process (debounce/filter/network)
-        waitABit(2500);
+        // Click the Search button using XPath
+        WebElementFacade searchButton = findFirstPresentWithWait(
+                By.cssSelector("button.btn.btn-primary[type='submit']"));
+        searchButton.click();
+        System.out.println("Clicked Search button after entering keyword: " + keyword);
 
-        System.out.println("Search performed for keyword: " + keyword);
+        // Wait for search results to load
+        waitABit(2000);
     }
 
     public boolean containsCategoryName(String categoryName) {
@@ -149,6 +149,15 @@ public class CategoriesPage extends PageObject {
             }
         }
 
+        // Click the Search button to apply the filter
+        WebElementFacade searchButton = findFirstPresentWithWait(
+                By.cssSelector("button.btn.btn-primary[type='submit']"),
+                By.cssSelector("button[type='submit']"),
+                By.xpath("//button[contains(text(), 'Search')]"));
+
+        searchButton.click();
+        System.out.println("Clicked Search button to apply parent category filter");
+
         // Wait for filter to apply
         waitABit(1500);
     }
@@ -159,30 +168,123 @@ public class CategoriesPage extends PageObject {
 
         System.out.println("Verifying results show only children of: " + parentCategory);
 
-        // Check if the page contains the parent category name or its children
-        // This is a simplified check - in a real scenario, you'd verify each row
-        boolean hasResults = !findAll(By.cssSelector("table tr, [role='row']")).isEmpty();
+        // Assuming structure: ID | Name | Parent Category
+        // Column indices: 0 = ID, 1 = Name, 2 = Parent Category
+        int parentColIndex = 2;
+        int nameColIndex = 1;
 
-        if (!hasResults) {
+        // Get all visible rows in the table or grid
+        List<WebElementFacade> rows = findAll(By.cssSelector("table tbody tr, [role='row']"));
+
+        if (rows.isEmpty()) {
             System.out.println("No results found after filtering");
             return false;
         }
 
-        // For now, we'll check if there are any visible rows/results
-        // A more sophisticated check would verify the parent category of each result
-        int resultCount = findAll(By.cssSelector("table tbody tr, [role='row']:not([role='row'] [role='row'])")).size();
-        System.out.println("Found " + resultCount + " results after filtering");
+        System.out.println("Found " + rows.size() + " rows after filtering");
 
-        // If we have results, assume the filter worked
-        // In a real test, you'd verify each result's parent category
-        return resultCount > 0;
+        int matchingRows = 0;
+        int totalDataRows = 0;
+        boolean emptyStateDetected = false;
+
+        for (WebElementFacade row : rows) {
+            List<org.openqa.selenium.WebElement> cells = row.findElements(By.cssSelector("td, [role='cell']"));
+
+            String rowText = row.getText().trim().toLowerCase();
+            if (rowText.contains("no category found") || rowText.contains("no categories found")
+                    || rowText.contains("no data") || rowText.contains("no rows")) {
+                emptyStateDetected = true;
+                System.out.println("Empty-state row detected, skipping data verification for it");
+                continue;
+            }
+
+            // Skip rows that clearly are not data rows
+            if (cells.isEmpty() || cells.size() <= parentColIndex) {
+                continue;
+            }
+
+            totalDataRows++;
+
+            String categoryName = (cells.size() > nameColIndex) ? cells.get(nameColIndex).getText().trim()
+                    : "(unknown)";
+            String parentInRow = cells.get(parentColIndex).getText().trim();
+
+            System.out.println("Row " + totalDataRows + ": Category='" + categoryName + "', Parent='" + parentInRow
+                    + "'");
+
+            boolean matches = parentInRow.equalsIgnoreCase(parentCategory) || parentInRow.equals(parentCategory)
+                    || parentInRow.toLowerCase().contains(parentCategory.toLowerCase());
+
+            if (matches) {
+                matchingRows++;
+                System.out.println("Matches filter (parent: " + parentInRow + ")");
+            } else {
+                System.out.println("Does NOT match filter! Expected parent: '" + parentCategory + "', but got: '"
+                        + parentInRow + "'");
+            }
+        }
+
+        if (totalDataRows == 0 && emptyStateDetected) {
+            System.out.println("Filter applied but UI shows empty state for parent '" + parentCategory
+                    + "'. Treating as valid (no children to display).");
+            return true;
+        }
+
+        if (totalDataRows == 0) {
+            System.out.println("No data rows found to verify and no empty state detected");
+            return false;
+        }
+
+        System.out.println("Filter verification: " + matchingRows + " out of " + totalDataRows + " rows match parent '"
+                + parentCategory + "'");
+
+        boolean allMatch = matchingRows == totalDataRows;
+
+        if (!allMatch) {
+            System.out.println("FILTER FAILED: Not all rows have parent '" + parentCategory + "'");
+        } else {
+            System.out.println("FILTER PASSED: All rows are children of '" + parentCategory + "'");
+        }
+
+        return allMatch;
     }
 
     public void clickAddCategory() {
-        // Ensure we're on the categories page first
-        if (!getDriver().getCurrentUrl().contains("/ui/categories")) {
+        // Check current URL and navigate if needed
+        String currentUrl = getDriver().getCurrentUrl();
+        System.out.println("Current URL before clicking Add: " + currentUrl);
+
+        // If we're on an add/edit form, navigate back to the list
+        if (currentUrl.contains("/add") || currentUrl.contains("/edit")) {
+            System.out.println("Currently on add/edit page, navigating back to categories list...");
+            openCategories();
+            waitABit(2000);
+        } else if (!currentUrl.contains("/ui/categories")) {
             System.out.println("Not on categories page, navigating before clicking Add...");
             openCategories();
+            waitABit(2000);
+        }
+
+        // Try to dismiss any modals/alerts that might be blocking the button
+        try {
+            List<WebElementFacade> modals = findAll(
+                    By.cssSelector(".modal, .alert, [role='dialog'], .toast, .notification"));
+            for (WebElementFacade modal : modals) {
+                if (modal.isVisible()) {
+                    System.out.println("Found visible modal/alert, attempting to dismiss...");
+                    // Try to find and click close/dismiss button
+                    List<WebElement> closeButtons = modal.findElements(By
+                            .cssSelector("button.close, .btn-close, button[aria-label='Close'], button[data-dismiss]"));
+                    if (!closeButtons.isEmpty() && closeButtons.get(0).isDisplayed()) {
+                        closeButtons.get(0).click();
+                        waitABit(500);
+                        System.out.println("Dismissed modal/alert");
+                    }
+                }
+            }
+        } catch (Exception e) {
+            // Ignore if no modals found
+            System.out.println("No modals to dismiss");
         }
 
         // Wait for page to be ready
@@ -190,22 +292,24 @@ public class CategoriesPage extends PageObject {
 
         System.out.println("Attempting to click Add Category button");
 
-        // Find Add/Create button - prioritize the exact text "Add A Category"
+        // Find Add/Create button - OPTIMIZED based on actual HTML structure
+        // The actual element is: <a href="/ui/categories/add" class="btn
+        // btn-primary">Add A Category</a>
         WebElementFacade addButton = findFirstPresentWithWait(
+                // Prioritize the actual structure first (fastest)
+                By.cssSelector("a.btn.btn-primary[href*='/categories/add']"),
+                By.xpath("//a[contains(@href, '/categories/add') and contains(text(), 'Add A Category')]"),
+                By.xpath("//a[contains(text(), 'Add A Category')]"),
+                By.cssSelector("a[href*='/categories/add']"),
+                // Fallback to button selectors (in case UI changes)
                 By.xpath("//button[contains(text(), 'Add A Category')]"),
                 By.xpath("//button[contains(text(), 'Add a Category')]"),
                 By.xpath("//button[text()='Add A Category']"),
-                By.xpath("//a[contains(text(), 'Add A Category')]"),
                 By.xpath("//button[contains(., 'Add A Category')]"),
-                By.cssSelector("button[id*='add']"),
-                By.cssSelector("button[id*='Add']"),
-                By.cssSelector("button[id*='create']"),
-                By.cssSelector("button[id*='Create']"),
-                By.cssSelector("button[class*='add']"),
-                By.cssSelector("button[class*='Add']"),
-                By.xpath("//button[contains(text(), 'Add')]"),
-                By.xpath("//button[contains(text(), 'Create')]"),
-                By.xpath("//button[contains(text(), 'New')]"));
+                // Generic fallbacks (last resort)
+                By.cssSelector("button[id*='add'], a[id*='add']"),
+                By.cssSelector("button[class*='add'], a[class*='add']"),
+                By.xpath("//button[contains(text(), 'Add')] | //a[contains(text(), 'Add')]"));
 
         System.out.println("Found button with text: " + addButton.getText());
         addButton.click();
@@ -317,6 +421,14 @@ public class CategoriesPage extends PageObject {
         // Check for success message or notification
         if (containsText("success") || containsText("Success") || containsText("created") || containsText("Created")) {
             System.out.println("Success message found");
+        }
+
+        // Ensure we're back on the categories list page
+        String currentUrl = getDriver().getCurrentUrl();
+        if (currentUrl.contains("/add") || currentUrl.contains("/edit")) {
+            System.out.println("Still on add/edit page after save, navigating back to list...");
+            openCategories();
+            waitABit(2000);
         }
     }
 
@@ -467,6 +579,44 @@ public class CategoriesPage extends PageObject {
         System.out.println("Current URL after direct access: " + getDriver().getCurrentUrl());
     }
 
+    public void openEditCategoryPage(String categoryId) {
+        String base = System.getProperty("webdriver.base.url", "http://localhost:8080");
+        if (base == null || base.isBlank()) {
+            base = "http://localhost:8080";
+        }
+
+        String url = base.endsWith("/") ? base + "ui/categories/edit/" + categoryId
+                : base + "/ui/categories/edit/" + categoryId;
+
+        System.out.println("Attempting to access edit category page directly: " + url);
+        openUrl(url);
+        waitABit(2000);
+        System.out.println("Current URL after direct access: " + getDriver().getCurrentUrl());
+    }
+
+    public String getFirstCategoryId() {
+        if (!getDriver().getCurrentUrl().contains("/ui/categories")) {
+            openCategories();
+        }
+
+        waitABit(1500);
+
+        List<WebElementFacade> rows = findAll(By.cssSelector("table tbody tr, [role='row']"));
+        for (WebElementFacade row : rows) {
+            List<WebElement> cells = row.findElements(By.cssSelector("td, [role='cell']"));
+            if (!cells.isEmpty()) {
+                String idText = cells.get(0).getText().trim();
+                if (!idText.isEmpty() && idText.matches("\\d+")) {
+                    System.out.println("Found category ID: " + idText);
+                    return idText;
+                }
+            }
+        }
+
+        System.out.println("No category ID found from list");
+        return null;
+    }
+
     public boolean isAccessDeniedPage() {
         System.out.println("Checking for access denied indicators...");
         waitABit(1000);
@@ -491,6 +641,30 @@ public class CategoriesPage extends PageObject {
         // List page usually ends with /ui/categories
         return (currentUrl.endsWith("/ui/categories") || currentUrl.endsWith("/ui/categories/"))
                 && isTableVisible();
+    }
+
+    /**
+     * Check if no results/empty state is displayed after search
+     */
+    public boolean isNoResultsDisplayed(String expectedMessage) {
+        waitABit(1000);
+
+        // Check for empty state row with colspan and text-center class
+        List<WebElementFacade> emptyStateRows = findAll(By.cssSelector("table tbody tr td.text-center.text-muted"));
+        System.out.println("[CategoriesPage] Found " + emptyStateRows.size() + " potential empty state rows");
+
+        for (WebElementFacade cell : emptyStateRows) {
+            String cellText = cell.getText().trim().toLowerCase();
+            System.out.println("[CategoriesPage] Found empty state cell: " + cellText);
+
+            if (cellText.contains("no") && (cellText.contains("found") || cellText.contains("category"))) {
+                System.out.println("[CategoriesPage] Empty state message found: " + cellText);
+                return true;
+            }
+        }
+
+        System.out.println("[CategoriesPage] No empty/no-results state detected");
+        return false;
     }
 
     public void sortBy(String columnName) {
@@ -641,6 +815,19 @@ public class CategoriesPage extends PageObject {
         return ascending || descending;
     }
 
+    private int getColumnIndexByHeaderKeyword(String keyword, int defaultIndex) {
+        List<WebElementFacade> headers = findAll(By.cssSelector("th, [role='columnheader']"));
+
+        for (int i = 0; i < headers.size(); i++) {
+            String headerText = headers.get(i).getText().trim().toLowerCase();
+            if (headerText.contains(keyword.toLowerCase())) {
+                return i;
+            }
+        }
+
+        return defaultIndex;
+    }
+
     public boolean isValidationErrorVisible() {
         // Detects common validation error indicators in different UI frameworks
         return !findAll(
@@ -664,28 +851,204 @@ public class CategoriesPage extends PageObject {
     }
 
     private WebElementFacade findFirstPresentWithWait(By... locators) {
-        // Try each locator with a short wait
+        // Try each locator with a SHORT wait (2 seconds instead of default 10+)
         for (By by : locators) {
             try {
-                WebElementFacade element = find(by);
-                element.waitUntilPresent();
+                // Use withTimeoutOf to limit wait time to 2 seconds
+                WebElementFacade element = find(by).withTimeoutOf(java.time.Duration.ofSeconds(2));
                 if (element.isPresent() && element.isVisible()) {
+                    System.out.println("[PERFORMANCE] Found element using locator: " + by);
                     return element;
+                }
+            } catch (Exception e) {
+                // Continue to next locator - this is expected when element not found
+            }
+        }
+
+        // Fallback - try again without visibility check using shorter timeout
+        for (By by : locators) {
+            try {
+                List<WebElementFacade> elements = findAll(by);
+                if (!elements.isEmpty()) {
+                    WebElementFacade element = elements.get(0).withTimeoutOf(java.time.Duration.ofSeconds(1));
+                    if (element.isPresent()) {
+                        System.out.println("[PERFORMANCE] Found element (fallback) using locator: " + by);
+                        return element;
+                    }
                 }
             } catch (Exception e) {
                 // Continue to next locator
             }
         }
-        // Fallback - try again without visibility check
-        for (By by : locators) {
-            if (!findAll(by).isEmpty()) {
-                WebElementFacade element = find(by);
-                if (element.isPresent()) {
-                    return element;
-                }
-            }
-        }
+
         // Last resort - return first locator (will fail with clear error)
+        System.out.println("[WARNING] No element found with any locator, returning first locator (will likely fail)");
         return find(locators[0]);
     }
+
+    public void verifyActiveMenuItem(String menuName) {
+        waitABit(1000);
+
+        System.out.println("Verifying active menu item for: " + menuName);
+
+        try {
+            WebElementFacade menuItem = findFirstPresentWithWait(
+                    By.xpath("//a[contains(@href, '/ui/" + menuName + "')]"));
+
+            String className = menuItem.getAttribute("class");
+            String ariaCurrent = menuItem.getAttribute("aria-current");
+            boolean isActive = (className != null && className.contains("active"))
+                    || ("page".equalsIgnoreCase(ariaCurrent));
+
+            System.out.println("Menu item '" + menuName + "' class: " + className);
+            System.out.println("Menu item '" + menuName + "' aria-current: " + ariaCurrent);
+            System.out.println("Menu item '" + menuName + "' active: " + isActive);
+
+            String message = "Menu item for " + menuName + " should be highlighted/active"
+                    + " (class=" + className + ", aria-current=" + ariaCurrent + ")";
+            SoftAssertionCollector.checkTrue(message, isActive);
+        } catch (Exception e) {
+            String message = "Menu item for " + menuName + " should be highlighted/active"
+                    + " (error: " + e.getMessage() + ")";
+            SoftAssertionCollector.checkTrue(message, false);
+        }
+    }
+
+    public boolean isMessageDisplayed(String expectedMessage) {
+        waitABit(1000);
+        System.out.println("[CategoriesPage] Checking for message: " + expectedMessage);
+
+        // Check if the message appears anywhere on the page
+        boolean messageFound = containsText(expectedMessage);
+
+        // Also check for "No category found" message specifically
+        if (expectedMessage.toLowerCase().contains("found")) {
+            messageFound = messageFound || isNoResultsDisplayed(expectedMessage);
+        }
+
+        System.out.println("[CategoriesPage] Message '" + expectedMessage + "' found: " + messageFound);
+        return messageFound;
+    }
+
+    // ==================== Security Verification Methods ====================
+
+    /**
+     * Verifies that Edit buttons are NOT visible for regular users
+     * This is a SECURITY check - regular users should not have edit access
+     */
+    public boolean areEditButtonsNotVisible() {
+        waitABit(2000);
+        System.out.println("[SECURITY CHECK] Verifying Edit buttons are NOT visible to regular user");
+
+        // 1. Check for standard Edit text buttons/links
+        List<WebElementFacade> editButtons = findAll(By.xpath(
+                "//button[contains(translate(text(), 'EDIT', 'edit'), 'edit')] | " +
+                        "//a[contains(translate(text(), 'EDIT', 'edit'), 'edit')] | " +
+                        "//*[contains(@class, 'edit')] | " +
+                        "//*[contains(@id, 'edit')] | " +
+                        "//*[contains(@title, 'Edit')] | " +
+                        "//*[contains(@aria-label, 'Edit')]"));
+
+        // 2. Check all buttons/links in the table for icons that look like Edit
+        // (pencil, etc.)
+        List<WebElementFacade> tableIcons = findAll(By.cssSelector("table i, .table i, table svg, .table svg"));
+        for (WebElementFacade icon : tableIcons) {
+            String html = icon.getAttribute("outerHTML").toLowerCase();
+            if (html.contains("edit") || html.contains("pencil") || html.contains("fa-edit")
+                    || html.contains("fa-pencil") || html.contains("write")) {
+                editButtons.add(icon);
+            }
+        }
+
+        // 3. Broad search for ANY button/link in the data rows (usually users shouldn't
+        // see any)
+        List<WebElementFacade> dataRowActions = findAll(By.cssSelector("table tbody tr button, table tbody tr a"));
+        for (WebElementFacade action : dataRowActions) {
+            String text = action.getText().toLowerCase();
+            if (text.contains("edit")) {
+                editButtons.add(action);
+            }
+        }
+
+        if (editButtons.isEmpty()) {
+            System.out.println("[PASS] No Edit buttons/indicators found in the DOM.");
+            return true;
+        }
+
+        int visibleCount = 0;
+        for (WebElementFacade btn : editButtons) {
+            if (btn.isCurrentlyVisible()) {
+                visibleCount++;
+                String desc = btn.getText().isEmpty() ? btn.getAttribute("outerHTML") : btn.getText();
+                System.out.println("[FAIL] SECURITY BUG: Possible Edit button IS visible - " + desc);
+            }
+        }
+
+        if (visibleCount > 0) {
+            System.out.println("[FAIL] Found " + visibleCount + " visible Edit-related elements - SECURITY BUG!");
+            return false;
+        }
+
+        System.out.println("[PASS] Edit-related elements are either missing or hidden - correct");
+        return true;
+    }
+
+    /**
+     * Verifies that Delete buttons are NOT visible for regular users
+     * This is a SECURITY check - regular users should not have delete access
+     */
+    public boolean areDeleteButtonsNotVisible() {
+        waitABit(2000);
+        System.out.println("[SECURITY CHECK] Verifying Delete buttons are NOT visible to regular user");
+
+        // 1. Check for standard Delete text buttons/links
+        List<WebElementFacade> deleteButtons = new java.util.ArrayList<>(findAll(By.xpath(
+                "//button[contains(translate(text(), 'DELETE', 'delete'), 'delete')] | " +
+                        "//a[contains(translate(text(), 'DELETE', 'delete'), 'delete')] | " +
+                        "//*[contains(@class, 'delete')] | " +
+                        "//*[contains(@class, 'remove')] | " +
+                        "//*[contains(@class, 'trash')] | " +
+                        "//*[contains(@id, 'delete')] | " +
+                        "//*[contains(@title, 'Delete')] | " +
+                        "//*[contains(@aria-label, 'Delete')]")));
+
+        // 2. Check all icons in the table for trash cans, etc.
+        List<WebElementFacade> tableIcons = findAll(By.cssSelector("table i, .table i, table svg, .table svg"));
+        for (WebElementFacade icon : tableIcons) {
+            String html = icon.getAttribute("outerHTML").toLowerCase();
+            if (html.contains("delete") || html.contains("trash") || html.contains("remove")
+                    || html.contains("fa-trash") || html.contains("fa-remove")) {
+                deleteButtons.add(icon);
+            }
+        }
+
+        // 3. Check for buttons with 'danger' or 'red' classes in the table which are
+        // often delete buttons
+        List<WebElementFacade> dangerButtons = findAll(
+                By.cssSelector("table .btn-danger, table .text-danger, table [class*='danger']"));
+        deleteButtons.addAll(dangerButtons);
+
+        if (deleteButtons.isEmpty()) {
+            System.out.println("[PASS] No Delete buttons/indicators found in the DOM.");
+            return true;
+        }
+
+        int visibleCount = 0;
+        for (WebElementFacade btn : deleteButtons) {
+            if (btn.isCurrentlyVisible()) {
+                visibleCount++;
+                String desc = btn.getText().isEmpty() ? "Element with icon/class" : btn.getText();
+                System.out.println("[FAIL] SECURITY BUG: Possible Delete button IS visible - " + desc);
+            }
+        }
+
+        if (visibleCount > 0) {
+            System.out.println("[FAIL] Found " + visibleCount + " visible Delete-related elements - SECURITY BUG!");
+            return false;
+        }
+
+        System.out.println("[PASS] Delete-related elements are either missing or hidden - correct");
+        return true;
+    }
+
 }

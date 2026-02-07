@@ -2,7 +2,6 @@ package com.OnTerminal.steps.ui;
 
 import com.OnTerminal.pages.CategoriesPage;
 import com.OnTerminal.pages.LoginPage;
-import io.cucumber.java.en.Given;
 import io.cucumber.java.en.Then;
 import io.cucumber.java.en.When;
 import net.thucydides.model.util.EnvironmentVariables;
@@ -15,19 +14,6 @@ public class CategoryUiSteps {
     LoginPage loginPage;
     CategoriesPage categoriesPage;
     private EnvironmentVariables environmentVariables;
-
-    @Given("user is logged in as {string}")
-    public void user_is_logged_in_as(String role) {
-        String username, password;
-        if (role.equalsIgnoreCase("admin")) {
-            username = environmentVariables.getProperty("admin.username");
-            password = environmentVariables.getProperty("admin.password");
-        } else {
-            username = environmentVariables.getProperty("user.username");
-            password = environmentVariables.getProperty("user.password");
-        }
-        loginPage.login(username, password);
-    }
 
     @When("user opens categories page")
     public void user_opens_categories_page() {
@@ -105,12 +91,6 @@ public class CategoryUiSteps {
         System.out.println("Attempted to access add category page directly");
     }
 
-    @Then("user should see access denied page")
-    public void user_should_see_access_denied_page() {
-        assertTrue("User should see access denied page",
-                categoriesPage.isAccessDeniedPage());
-    }
-
     @When("user sorts by {string}")
     public void user_sorts_by(String columnName) {
         categoriesPage.sortBy(columnName);
@@ -165,6 +145,42 @@ public class CategoryUiSteps {
     public void verifyCatValidationError() {
         assertTrue("Validation error should be visible on categories page",
                 categoriesPage.isValidationErrorVisible());
+    }
+
+    @When("user searches for {string}")
+    public void user_searches_for(String keyword) {
+        categoriesPage.searchByKeyword(keyword);
+        System.out.println("Searched for: " + keyword);
+    }
+
+    @Then("message {string} should be displayed")
+    public void message_should_be_displayed(String expectedMessage) {
+        assertTrue("Message should be displayed: " + expectedMessage,
+                categoriesPage.isMessageDisplayed(expectedMessage));
+    }
+
+    // ==================== Security Test Steps ====================
+
+    @Then("Edit buttons should not be visible")
+    public void edit_buttons_should_not_be_visible() {
+        assertTrue("Edit buttons should NOT be visible for regular user",
+                categoriesPage.areEditButtonsNotVisible());
+    }
+
+    @Then("Delete buttons should not be visible")
+    public void delete_buttons_should_not_be_visible() {
+        assertTrue("Delete buttons should NOT be visible for regular user",
+                categoriesPage.areDeleteButtonsNotVisible());
+    }
+
+    @When("user tries to access edit page for first category")
+    public void user_tries_to_access_edit_page_for_first_category() {
+        String categoryId = categoriesPage.getFirstCategoryId();
+        if (categoryId != null) {
+            categoriesPage.openEditCategoryPage(categoryId);
+        } else {
+            System.out.println("Warning: No category found to test edit access");
+        }
     }
 
 }

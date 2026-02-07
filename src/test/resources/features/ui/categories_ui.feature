@@ -1,3 +1,4 @@
+@categories_ui
 Feature: Category Management UI (Group50)
 
   @TC_CAT_001
@@ -75,8 +76,21 @@ Feature: Category Management UI (Group50)
     And user clicks Cancel
     Then user should be on categories list page
 
+    
+  # ============================================
+  # USER CATEGORY UI TESTS
+  # ============================================
+
+  @TC_CAT_USR_UI_008 @user @IFHAM
+  Scenario: TC_CAT_USR_UI_008 - No category found message displays
+    Given user is logged in as "user"
+    When user navigates to categories page
+    And user searches for "XYZNONEXISTENT123"
+    Then message "No category found" should be displayed
+
+
   @TC_CAT_011
-  Scenario: Detect Duplicate Category Name Bug
+  Scenario: TC_CAT_011 Detect Duplicate Category Name Bug
     Given user is logged in as "admin"
     When user opens categories page
     And user clicks Add Category
@@ -86,3 +100,22 @@ Feature: Category Management UI (Group50)
     And user enters category name "DupTest"
     And user saves category
     Then validation error should be shown on categories page
+
+  @TC_CAT_SEC_001 @security @bug
+  Scenario: TC_CAT_SEC_001 - Regular user should not see Edit buttons
+    Given user is logged in as "user"
+    When user opens categories page
+    Then Edit buttons should not be visible
+
+  @TC_CAT_SEC_002 @security @bug
+  Scenario: TC_CAT_SEC_002 - Regular user should not see Delete buttons
+    Given user is logged in as "user"
+    When user opens categories page
+    Then Delete buttons should not be visible
+
+  @TC_CAT_SEC_003 @security @bug
+  Scenario: TC_CAT_SEC_003 - Regular user should not be able to edit category directly
+    Given user is logged in as "user"
+    When user opens categories page
+    And user tries to access edit page for first category
+    Then user should see access denied page
