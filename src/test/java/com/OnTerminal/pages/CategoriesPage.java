@@ -250,10 +250,41 @@ public class CategoriesPage extends PageObject {
     }
 
     public void clickAddCategory() {
-        // Ensure we're on the categories page first
-        if (!getDriver().getCurrentUrl().contains("/ui/categories")) {
+        // Check current URL and navigate if needed
+        String currentUrl = getDriver().getCurrentUrl();
+        System.out.println("Current URL before clicking Add: " + currentUrl);
+
+        // If we're on an add/edit form, navigate back to the list
+        if (currentUrl.contains("/add") || currentUrl.contains("/edit")) {
+            System.out.println("Currently on add/edit page, navigating back to categories list...");
+            openCategories();
+            waitABit(2000);
+        } else if (!currentUrl.contains("/ui/categories")) {
             System.out.println("Not on categories page, navigating before clicking Add...");
             openCategories();
+            waitABit(2000);
+        }
+
+        // Try to dismiss any modals/alerts that might be blocking the button
+        try {
+            List<WebElementFacade> modals = findAll(
+                    By.cssSelector(".modal, .alert, [role='dialog'], .toast, .notification"));
+            for (WebElementFacade modal : modals) {
+                if (modal.isVisible()) {
+                    System.out.println("Found visible modal/alert, attempting to dismiss...");
+                    // Try to find and click close/dismiss button
+                    List<WebElement> closeButtons = modal.findElements(By
+                            .cssSelector("button.close, .btn-close, button[aria-label='Close'], button[data-dismiss]"));
+                    if (!closeButtons.isEmpty() && closeButtons.get(0).isDisplayed()) {
+                        closeButtons.get(0).click();
+                        waitABit(500);
+                        System.out.println("Dismissed modal/alert");
+                    }
+                }
+            }
+        } catch (Exception e) {
+            // Ignore if no modals found
+            System.out.println("No modals to dismiss");
         }
 
         // Wait for page to be ready
@@ -388,6 +419,14 @@ public class CategoriesPage extends PageObject {
         // Check for success message or notification
         if (containsText("success") || containsText("Success") || containsText("created") || containsText("Created")) {
             System.out.println("Success message found");
+        }
+
+        // Ensure we're back on the categories list page
+        String currentUrl = getDriver().getCurrentUrl();
+        if (currentUrl.contains("/add") || currentUrl.contains("/edit")) {
+            System.out.println("Still on add/edit page after save, navigating back to list...");
+            openCategories();
+            waitABit(2000);
         }
     }
 
