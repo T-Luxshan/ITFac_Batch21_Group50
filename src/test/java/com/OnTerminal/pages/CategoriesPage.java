@@ -2,7 +2,9 @@ package com.OnTerminal.pages;
 
 import net.serenitybdd.core.pages.PageObject;
 import net.serenitybdd.core.pages.WebElementFacade;
+import com.OnTerminal.utils.SoftAssertionCollector;
 import org.openqa.selenium.By;
+import org.openqa.selenium.WebElement;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -60,27 +62,26 @@ public class CategoriesPage extends PageObject {
         // Wait for page to be fully loaded
         waitABit(2000);
 
+        // Print debugging information
+        System.out.println("Current URL: " + getDriver().getCurrentUrl());
+        System.out.println("Page title: " + getDriver().getTitle());
+
         // Find search input using multiple possible selectors with wait
-        WebElementFacade searchInput = findFirstPresentWithWait(
-                By.cssSelector("input[type='search']"),
-                By.cssSelector("input[placeholder*='Search']"),
-                By.cssSelector("input[placeholder*='search']"),
-                By.cssSelector("input[name='search']"),
-                By.cssSelector("input[id*='search']"),
-                By.cssSelector("input[class*='search']"),
-                By.cssSelector("input[class*='Search']"),
-                By.cssSelector("[role='searchbox']"),
-                By.cssSelector("input[type='text']"),
-                By.cssSelector("input"));
+        WebElementFacade searchInput = find(By.name("name"));
 
         searchInput.clear();
         searchInput.type(keyword);
         searchInput.sendKeys(org.openqa.selenium.Keys.ENTER);
 
-        // Wait a bit longer for search to process (debounce/filter/network)
-        waitABit(2500);
+        // Click the Search button using XPath
+        WebElementFacade searchButton = findFirstPresentWithWait(
+            By.cssSelector("button.btn.btn-primary[type='submit']")
+        );
+        searchButton.click();
+        System.out.println("Clicked Search button after entering keyword: " + keyword);
 
-        System.out.println("Search performed for keyword: " + keyword);
+        // Wait for search results to load
+        waitABit(2000);
     }
 
     public boolean containsCategoryName(String categoryName) {
@@ -456,6 +457,44 @@ public class CategoriesPage extends PageObject {
         System.out.println("Current URL after direct access: " + getDriver().getCurrentUrl());
     }
 
+    public void openEditCategoryPage(String categoryId) {
+        String base = System.getProperty("webdriver.base.url", "http://localhost:8080");
+        if (base == null || base.isBlank()) {
+            base = "http://localhost:8080";
+        }
+
+        String url = base.endsWith("/") ? base + "ui/categories/edit/" + categoryId
+                : base + "/ui/categories/edit/" + categoryId;
+
+        System.out.println("Attempting to access edit category page directly: " + url);
+        openUrl(url);
+        waitABit(2000);
+        System.out.println("Current URL after direct access: " + getDriver().getCurrentUrl());
+    }
+
+    public String getFirstCategoryId() {
+        if (!getDriver().getCurrentUrl().contains("/ui/categories")) {
+            openCategories();
+        }
+
+        waitABit(1500);
+
+        List<WebElementFacade> rows = findAll(By.cssSelector("table tbody tr, [role='row']"));
+        for (WebElementFacade row : rows) {
+            List<WebElement> cells = row.findElements(By.cssSelector("td, [role='cell']"));
+            if (!cells.isEmpty()) {
+                String idText = cells.get(0).getText().trim();
+                if (!idText.isEmpty() && idText.matches("\\d+")) {
+                    System.out.println("Found category ID: " + idText);
+                    return idText;
+                }
+            }
+        }
+
+        System.out.println("No category ID found from list");
+        return null;
+    }
+
     public boolean isAccessDeniedPage() {
         System.out.println("Checking for access denied indicators...");
         waitABit(1000);
@@ -481,6 +520,31 @@ public class CategoriesPage extends PageObject {
         return (currentUrl.endsWith("/ui/categories") || currentUrl.endsWith("/ui/categories/"))
                 && isTableVisible();
     }
+
+    /**
+     * Check if no results/empty state is displayed after search
+     */
+    public boolean isNoResultsDisplayed(String expectedMessage) {
+        waitABit(1000);
+        
+        // Check for empty state row with colspan and text-center class
+        List<WebElementFacade> emptyStateRows = findAll(By.cssSelector("table tbody tr td.text-center.text-muted"));
+        System.out.println("[CategoriesPage] Found " + emptyStateRows.size() + " potential empty state rows");
+        
+        for (WebElementFacade cell : emptyStateRows) {
+            String cellText = cell.getText().trim().toLowerCase();
+            System.out.println("[CategoriesPage] Found empty state cell: " + cellText);
+            
+            if (cellText.contains("no") && (cellText.contains("found") || cellText.contains("category"))) {
+                System.out.println("[CategoriesPage] Empty state message found: " + cellText);
+                return true;
+            }
+        }
+             
+        System.out.println("[CategoriesPage] No empty/no-results state detected");
+        return false;
+    }
+
 
     public void sortBy(String columnName) {
         waitABit(1000);
@@ -670,4 +734,34 @@ public class CategoriesPage extends PageObject {
         // Last resort - return first locator (will fail with clear error)
         return find(locators[0]);
     }
+
+    public void verifyActiveMenuItem(String menuName) {
+        waitABit(1000);
+        
+        System.out.println("Verifying active menu item for: " + menuName);
+        
+        try {
+            WebElementFacade menuItem = findFirstPresentWithWait(
+                    By.xpath("//a[contains(@href, '/ui/" + menuName + "')]"));
+
+            String className = menuItem.getAttribute("class");
+            String ariaCurrent = menuItem.getAttribute("aria-current");
+            boolean isActive = (className != null && className.contains("active"))
+                    || ("page".equalsIgnoreCase(ariaCurrent));
+
+            System.out.println("Menu item '" + menuName + "' class: " + className);
+            System.out.println("Menu item '" + menuName + "' aria-current: " + ariaCurrent);
+            System.out.println("Menu item '" + menuName + "' active: " + isActive);
+
+            String message = "Menu item for " + menuName + " should be highlighted/active"
+                    + " (class=" + className + ", aria-current=" + ariaCurrent + ")";
+            SoftAssertionCollector.checkTrue(message, isActive);
+        } catch (Exception e) {
+            String message = "Menu item for " + menuName + " should be highlighted/active"
+                    + " (error: " + e.getMessage() + ")";
+            SoftAssertionCollector.checkTrue(message, false);
+        }
+    }
+
+
 }
