@@ -2,28 +2,40 @@ package com.OnTerminal.steps.api;
 
 import com.OnTerminal.config.Constants;
 import com.OnTerminal.steps.BaseApiSteps;
+import io.cucumber.java.en.And;
 import io.cucumber.java.en.Given;
 import io.cucumber.java.en.Then;
 import io.cucumber.java.en.When;
 import io.restassured.response.Response;
+import net.serenitybdd.rest.SerenityRest;
+import net.thucydides.model.util.EnvironmentVariables;
 
 import java.util.List;
 import java.util.Map;
 
+import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.*;
 
 /**
  * Step Definitions for Sales and Security API Tests
- * Uses BaseApiSteps for shared auth/request helpers and Constants for configuration values
- * Covers test cases: TC_SALES_ADM_API_006, TC_PLANT_ADM_API_002, TC_CAT_ADM_API_003-004,
- *                    TC_SEC_ADM_API_005, TC_PLANT_USR_API_006, TC_SEC_USR_API_007-008,
- *                    TC_PLANT_USR_API_009, TC_SALES_USR_API_010
+ * Uses BaseApiSteps for shared auth/request helpers and Constants for
+ * configuration values
+ * Covers test cases: TC_SALES_ADM_API_006, TC_PLANT_ADM_API_002,
+ * TC_CAT_ADM_API_003-004,
+ * TC_SEC_ADM_API_005, TC_PLANT_USR_API_006, TC_SEC_USR_API_007-008,
+ * TC_PLANT_USR_API_009, TC_SALES_USR_API_010
  */
 public class SalesApiSteps extends BaseApiSteps {
 
     // Test state
     private Integer plantId;
     private Integer plantStock;
+
+    // Fields from second part
+    private static final String BASE = System.getProperty("api.base.url", "http://localhost:8080");
+    private String token;
+    private EnvironmentVariables environmentVariables;
+    private int internalSaleId;
 
     // ==================== Data Setup Steps ====================
 
@@ -33,7 +45,7 @@ public class SalesApiSteps extends BaseApiSteps {
 
         if (response.statusCode() == Constants.StatusCodes.OK) {
             List<Map<String, Object>> plants = response.jsonPath().getList("$");
-            
+
             // Find first plant with stock > 0
             for (Map<String, Object> plant : plants) {
                 Integer qty = (Integer) plant.get("quantity");
@@ -43,7 +55,7 @@ public class SalesApiSteps extends BaseApiSteps {
                     break;
                 }
             }
-            
+
             // If no plant with stock, use first plant or create one
             if (plantId == null && !plants.isEmpty()) {
                 Map<String, Object> firstPlant = plants.get(0);
@@ -51,23 +63,23 @@ public class SalesApiSteps extends BaseApiSteps {
                 plantStock = firstPlant.get("quantity") != null ? (Integer) firstPlant.get("quantity") : 0;
                 System.out.println("[SalesApiSteps] Using first plant ID: " + plantId + " (stock: " + plantStock + ")");
             }
-            
+
             // If still no plant, create one for testing
             if (plantId == null) {
                 System.out.println("[SalesApiSteps] No plants found, creating one for testing...");
                 createTestPlant();
             }
-            
+
             System.out.println("[SalesApiSteps] Found plant ID: " + plantId + " with stock: " + plantStock);
         } else {
             System.out.println("[SalesApiSteps] Failed to get plants: " + response.asString());
             // Try to create a plant anyway
             createTestPlant();
         }
-        
+
         assertNotNull("Plant ID must be available for test", plantId);
     }
-    
+
     private void createTestPlant() {
         // Get a valid category first
         Response catResponse = sendGet(Constants.UrlPaths.API_CATEGORIES);
@@ -147,13 +159,14 @@ public class SalesApiSteps extends BaseApiSteps {
                 for (String em : expectedMessages) {
                     String emLow = em.toLowerCase();
                     if ((msg != null && msg.toLowerCase().contains(emLow)) ||
-                        (err != null && err.toLowerCase().contains(emLow)) ||
-                        (det != null && det.toLowerCase().contains(emLow))) {
+                            (err != null && err.toLowerCase().contains(emLow)) ||
+                            (det != null && det.toLowerCase().contains(emLow))) {
                         found = true;
                         break;
                     }
                 }
-            } catch (Exception ignored) {}
+            } catch (Exception ignored) {
+            }
         }
 
         assertTrue("Response should contain an expected error message", found);
@@ -184,29 +197,11 @@ public class SalesApiSteps extends BaseApiSteps {
             System.out.println("FINDING: API returned " + status + " - check if this is expected behavior");
         }
     }
-}
 
-import io.cucumber.java.en.And;
-import io.cucumber.java.en.Given;
-import io.cucumber.java.en.Then;
-import io.cucumber.java.en.When;
-import net.serenitybdd.rest.SerenityRest;
-import net.thucydides.model.util.EnvironmentVariables;
-import java.util.List;
-import java.util.Map;
-import java.util.HashMap;
-import static org.hamcrest.Matchers.*;
-
-public class SalesApiSteps {
-
-    private static final String BASE = System.getProperty("api.base.url", "http://localhost:8080");
-    private String token;
-    private EnvironmentVariables environmentVariables;
-    private int internalSaleId;
-
+    // ==================== Steps from second part ====================
 
     @Given("sales api is authenticated as {string}")
-    public void authenticate(String role) {
+    public void salesApiIsAuthenticatedAs(String role) {
         String username = environmentVariables.getProperty(role + ".username");
         String password = environmentVariables.getProperty(role + ".password");
 
@@ -218,11 +213,16 @@ public class SalesApiSteps {
                 .then().extract().response();
 
         token = response.jsonPath().getString("token");
-        if (token == null) token = response.jsonPath().getString("accessToken");
-        if (token == null) token = response.jsonPath().getString("jwt");
+        if (token == null)
+            token = response.jsonPath().getString("accessToken");
+        if (token == null)
+            token = response.jsonPath().getString("jwt");
+
+        // Sync with base class authToken so authenticatedRequest() works
+        authToken = token;
+        System.out.println("[SalesAuth] Authenticated as " + role + ", token starting with: "
+                + (token != null ? token.substring(0, 10) : "null"));
     }
-
-
 
     @When("sales api user deletes the created sale")
     public void deleteSale() {
@@ -242,28 +242,27 @@ public class SalesApiSteps {
                 .put("/api/sales/" + internalSaleId);
     }
 
-//    @When("sales api user creates sale for plant id {int} with quantity {int}")
-//    public void createSale(int plantId, int qty) {
-//        SerenityRest.given()
-//                .baseUri(BASE)
-//                .header("Authorization", "Bearer " + token)
-//                .queryParam("quantity", qty)
-//                .post("/api/sales/plant/" + plantId);
-//    }
-@When("sales api user creates sale for plant id {int} with quantity {int}")
-public void createSale(int plantId, int qty) {
-    var response = SerenityRest.given()
-            .baseUri(BASE)
-            .header("Authorization", "Bearer " + token)
-            .queryParam("quantity", qty)
-            .post("/api/sales/plant/" + plantId)
-            .then().extract().response();
+    // @When("sales api user creates sale for plant id {int} with quantity {int}")
+    // public void createSale(int plantId, int qty) {
+    // SerenityRest.given()
+    // .baseUri(BASE)
+    // .header("Authorization", "Bearer " + token)
+    // .queryParam("quantity", qty)
+    // .post("/api/sales/plant/" + plantId);
+    // }
+    @When("sales api user creates sale for plant id {int} with quantity {int}")
+    public void createSale(int plantId, int qty) {
+        var response = SerenityRest.given()
+                .baseUri(BASE)
+                .header("Authorization", "Bearer " + token)
+                .queryParam("quantity", qty)
+                .post("/api/sales/plant/" + plantId)
+                .then().extract().response();
 
-
-    if (response.statusCode() == 200 || response.statusCode() == 201) {
-        internalSaleId = response.jsonPath().getInt("id");
+        if (response.statusCode() == 200 || response.statusCode() == 201) {
+            internalSaleId = response.jsonPath().getInt("id");
+        }
     }
-}
 
     @When("sales api user requests sales with sort {string}")
     public void getSalesSorted(String sort) {
@@ -283,14 +282,14 @@ public void createSale(int plantId, int qty) {
                 .queryParam("size", size)
                 .get("/api/sales/page");
     }
+
     @Given("sales api is not authenticated")
     public void salesApiIsNotAuthenticated() {
         SerenityRest.reset();
     }
 
-
     @When("sales api user sends GET {string}")
-    public void sendGet(String endpoint) {
+    public void salesApiUserSendsGet(String endpoint) {
         SerenityRest.given()
                 .baseUri(BASE)
                 .get(endpoint);
@@ -313,7 +312,7 @@ public void createSale(int plantId, int qty) {
 
     @Then("sales api response status should be {int}")
     public void verifyStatus(int code) {
-//        System.out.println(code+"ghgggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggg");
+        // System.out.println(code+"ghgggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggg");
         SerenityRest.then().statusCode(code);
     }
 
@@ -323,9 +322,9 @@ public void createSale(int plantId, int qty) {
         if (values != null && values.size() > 1) {
             for (int i = 0; i < values.size() - 1; i++) {
                 if (order.equalsIgnoreCase("desc")) {
-                    assert values.get(i) >= values.get(i+1);
+                    assert values.get(i) >= values.get(i + 1);
                 } else {
-                    assert values.get(i) <= values.get(i+1);
+                    assert values.get(i) <= values.get(i + 1);
                 }
             }
         }
@@ -337,8 +336,6 @@ public void createSale(int plantId, int qty) {
                 .body("$", hasKey("totalElements"))
                 .body("$", hasKey("totalPages"));
     }
-
-
 
     @And("sales api response should contain a list of sales")
     public void verifyListExists() {
