@@ -1,4 +1,4 @@
-@ui @plants
+@plants_ui
 Feature: Plants Management UI (Group50)
   UI tests for plant-related operations including add, edit, and list views
 

@@ -1,3 +1,4 @@
+@categories_ui
 Feature: Category Management UI (Group50)
 
   @TC_CAT_001

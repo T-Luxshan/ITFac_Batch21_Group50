@@ -1,3 +1,4 @@
+@categories_api
 Feature: Category Management API (Group50)
 
   @TC_API_CAT_001

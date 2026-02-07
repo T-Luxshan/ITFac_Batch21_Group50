@@ -2,7 +2,6 @@ package com.OnTerminal.steps.ui;
 
 import com.OnTerminal.pages.CategoriesPage;
 import com.OnTerminal.pages.LoginPage;
-import io.cucumber.java.en.Given;
 import io.cucumber.java.en.Then;
 import io.cucumber.java.en.When;
 import net.thucydides.model.util.EnvironmentVariables;
@@ -146,6 +145,18 @@ public class CategoryUiSteps {
     public void verifyCatValidationError() {
         assertTrue("Validation error should be visible on categories page",
                 categoriesPage.isValidationErrorVisible());
+    }
+
+    @When("user searches for {string}")
+    public void user_searches_for(String keyword) {
+        categoriesPage.searchByKeyword(keyword);
+        System.out.println("Searched for: " + keyword);
+    }
+
+    @Then("message {string} should be displayed")
+    public void message_should_be_displayed(String expectedMessage) {
+        assertTrue("Message should be displayed: " + expectedMessage,
+                categoriesPage.isMessageDisplayed(expectedMessage));
     }
 
 }

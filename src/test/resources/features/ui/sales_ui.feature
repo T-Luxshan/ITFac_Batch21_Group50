@@ -1,4 +1,4 @@
-@ui @sales
+@sales_ui
 Feature: Sales Management UI (Group50)
   UI tests for sales-related operations including selling plants and viewing sales records
 

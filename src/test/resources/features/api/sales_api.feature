@@ -1,4 +1,4 @@
-@api @sales
+@sales_api
 Feature: Sales Management API  (Group50)
   API tests for sales-related operations including selling plants and sales records
 

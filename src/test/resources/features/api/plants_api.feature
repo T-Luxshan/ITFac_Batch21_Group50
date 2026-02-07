@@ -1,4 +1,4 @@
-@api @plants
+@plants_api
 Feature: Plants Management API  (Group50)
   API tests for plant-related operations including CRUD and stock management
 

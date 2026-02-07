@@ -75,8 +75,7 @@ public class CategoriesPage extends PageObject {
 
         // Click the Search button using XPath
         WebElementFacade searchButton = findFirstPresentWithWait(
-            By.cssSelector("button.btn.btn-primary[type='submit']")
-        );
+                By.cssSelector("button.btn.btn-primary[type='submit']"));
         searchButton.click();
         System.out.println("Clicked Search button after entering keyword: " + keyword);
 
@@ -152,23 +151,66 @@ public class CategoriesPage extends PageObject {
 
         System.out.println("Verifying results show only children of: " + parentCategory);
 
-        // Check if the page contains the parent category name or its children
-        // This is a simplified check - in a real scenario, you'd verify each row
-        boolean hasResults = !findAll(By.cssSelector("table tr, [role='row']")).isEmpty();
+        // Get all visible rows in the table
+        List<WebElementFacade> rows = findAll(By.cssSelector("table tbody tr, [role='row']"));
 
-        if (!hasResults) {
+        if (rows.isEmpty()) {
             System.out.println("No results found after filtering");
             return false;
         }
 
-        // For now, we'll check if there are any visible rows/results
-        // A more sophisticated check would verify the parent category of each result
-        int resultCount = findAll(By.cssSelector("table tbody tr, [role='row']:not([role='row'] [role='row'])")).size();
-        System.out.println("Found " + resultCount + " results after filtering");
+        System.out.println("Found " + rows.size() + " rows after filtering");
 
-        // If we have results, assume the filter worked
-        // In a real test, you'd verify each result's parent category
-        return resultCount > 0;
+        // Check each row to verify the parent category
+        int matchingRows = 0;
+        int totalDataRows = 0;
+
+        for (WebElementFacade row : rows) {
+            List<org.openqa.selenium.WebElement> cells = row.findElements(By.cssSelector("td, [role='cell']"));
+
+            // Skip empty or header rows
+            if (cells.isEmpty() || cells.size() < 3) {
+                continue;
+            }
+
+            totalDataRows++;
+
+            // Assuming structure: ID | Name | Parent Category
+            // Column index 2 should be the parent category
+            String categoryName = cells.get(1).getText().trim();
+            String parentInRow = cells.get(2).getText().trim();
+
+            System.out.println(
+                    "Row " + totalDataRows + ": Category='" + categoryName + "', Parent='" + parentInRow + "'");
+
+            // Check if this row's parent matches our filter
+            boolean matches = parentInRow.equalsIgnoreCase(parentCategory) ||
+                    parentInRow.equals(parentCategory) ||
+                    // Sometimes parent might be shown with different formatting
+                    parentInRow.toLowerCase().contains(parentCategory.toLowerCase());
+
+            if (matches) {
+                matchingRows++;
+                System.out.println("Matches filter (parent: " + parentInRow + ")");
+            } else {
+                System.out.println("Does NOT match filter! Expected parent: '" + parentCategory + "', but got: '"
+                        + parentInRow + "'");
+            }
+        }
+
+        System.out.println("Filter verification: " + matchingRows + " out of " + totalDataRows + " rows match parent '"
+                + parentCategory + "'");
+
+        // All visible rows should match the filter
+        boolean allMatch = (totalDataRows > 0) && (matchingRows == totalDataRows);
+
+        if (!allMatch) {
+            System.out.println("FILTER FAILED: Not all rows have parent '" + parentCategory + "'");
+        } else {
+            System.out.println("FILTER PASSED: All rows are children of '" + parentCategory + "'");
+        }
+
+        return allMatch;
     }
 
     public void clickAddCategory() {
@@ -526,25 +568,24 @@ public class CategoriesPage extends PageObject {
      */
     public boolean isNoResultsDisplayed(String expectedMessage) {
         waitABit(1000);
-        
+
         // Check for empty state row with colspan and text-center class
         List<WebElementFacade> emptyStateRows = findAll(By.cssSelector("table tbody tr td.text-center.text-muted"));
         System.out.println("[CategoriesPage] Found " + emptyStateRows.size() + " potential empty state rows");
-        
+
         for (WebElementFacade cell : emptyStateRows) {
             String cellText = cell.getText().trim().toLowerCase();
             System.out.println("[CategoriesPage] Found empty state cell: " + cellText);
-            
+
             if (cellText.contains("no") && (cellText.contains("found") || cellText.contains("category"))) {
                 System.out.println("[CategoriesPage] Empty state message found: " + cellText);
                 return true;
             }
         }
-             
+
         System.out.println("[CategoriesPage] No empty/no-results state detected");
         return false;
     }
-
 
     public void sortBy(String columnName) {
         waitABit(1000);
@@ -737,9 +778,9 @@ public class CategoriesPage extends PageObject {
 
     public void verifyActiveMenuItem(String menuName) {
         waitABit(1000);
-        
+
         System.out.println("Verifying active menu item for: " + menuName);
-        
+
         try {
             WebElementFacade menuItem = findFirstPresentWithWait(
                     By.xpath("//a[contains(@href, '/ui/" + menuName + "')]"));
@@ -763,5 +804,20 @@ public class CategoriesPage extends PageObject {
         }
     }
 
+    public boolean isMessageDisplayed(String expectedMessage) {
+        waitABit(1000);
+        System.out.println("[CategoriesPage] Checking for message: " + expectedMessage);
+
+        // Check if the message appears anywhere on the page
+        boolean messageFound = containsText(expectedMessage);
+
+        // Also check for "No category found" message specifically
+        if (expectedMessage.toLowerCase().contains("found")) {
+            messageFound = messageFound || isNoResultsDisplayed(expectedMessage);
+        }
+
+        System.out.println("[CategoriesPage] Message '" + expectedMessage + "' found: " + messageFound);
+        return messageFound;
+    }
 
 }

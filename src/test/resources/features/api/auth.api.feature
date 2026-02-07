@@ -1,4 +1,4 @@
-#@API
+@authentication_api
 Feature: API Authentication
 
   @TC_AUTH_11

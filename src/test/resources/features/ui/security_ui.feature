@@ -1,4 +1,4 @@
-@ui @security
+@security_ui
 Feature: Security UI Tests (Group50)
   UI tests for authentication, authorization, navigation guards, and session management
 

@@ -1,4 +1,4 @@
-@api @security
+@security_api
 Feature: Security API Tests  (Group50)
   API tests for authentication, authorization, and security validations
 
