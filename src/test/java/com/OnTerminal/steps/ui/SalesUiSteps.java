@@ -201,6 +201,11 @@ public class SalesUiSteps {
         assertTrue("Delete button should not be visible", salesPage.isDeleteButtonNotVisible());
     }
 
+    @Then("Sell Plant button should not be visible")
+    public void verifySellPlantButtonHidden() {
+        assertFalse("Sell Plant button should not be visible", salesPage.isSellPlantButtonVisible());
+    }
+
     // ==================== Empty State Steps ====================
 
     @Then("\"No sales found\" message should be displayed if list is empty")
